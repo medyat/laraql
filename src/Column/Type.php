@@ -26,7 +26,6 @@ enum Type: string
     case Color = 'color';
     case Select = 'select';
     case Multiselect = 'multiselect';
-    case Tags = 'tags';
     case User = 'user';
     case Date = 'date';
     case Datetime = 'datetime';
@@ -45,7 +44,7 @@ enum Type: string
             self::String, self::Text, self::Email, self::Url, self::Phone => [Op::Contains, Op::NotContains, Op::Eq, Op::Neq, Op::StartsWith, Op::EndsWith, ...$empty],
             self::Id => [Op::In, Op::NotIn, Op::Contains, Op::NotContains, Op::Eq, Op::Neq, Op::StartsWith, Op::EndsWith, ...$empty],
             self::Color, self::Select, self::User => [Op::Eq, Op::Neq, Op::In, Op::NotIn, ...$empty],
-            self::Multiselect, self::Tags => [Op::In, Op::NotIn, ...$empty],
+            self::Multiselect => [Op::In, Op::NotIn, ...$empty],
             self::Date, self::Datetime => [Op::Eq, Op::Before, Op::After, Op::Within, ...$empty],
             self::Json => $empty,
         };
@@ -68,7 +67,7 @@ enum Type: string
 
     public function isList(): bool
     {
-        return in_array($this, [self::Multiselect, self::Tags], true);
+        return $this === self::Multiselect;
     }
 
     public function isDate(): bool

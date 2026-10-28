@@ -101,7 +101,7 @@
               "gross_total": 1250.0,
               "due_date": "2026-10-01",
               "created_at": "2026-09-20T08:00:00Z",
-              "tags": [
+              "labels": [
                 "export",
                 "vip"
               ],

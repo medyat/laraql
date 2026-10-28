@@ -23,6 +23,6 @@ class Order extends Model
 
     protected function casts(): array
     {
-        return ['tags' => 'array', 'created_at' => 'datetime'];
+        return ['labels' => 'array', 'created_at' => 'datetime'];
     }
 }

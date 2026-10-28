@@ -75,7 +75,7 @@ final class RowFormatter
             Type::Bool => (bool) $value,
             Type::Date => $value instanceof DateTimeInterface ? $value->format('Y-m-d') : substr(Raw::string($value), 0, 10),
             Type::Datetime => $this->datetime($value),
-            Type::Multiselect, Type::Tags, Type::Json => is_string($value) ? json_decode($value, true) : $value,
+            Type::Multiselect, Type::Json => is_string($value) ? json_decode($value, true) : $value,
             default => $value,
         };
     }

@@ -1,0 +1,51 @@
+{
+  "name": "filter-is-empty-multiselect",
+  "description": "is_empty on a list column matches NULL and [].",
+  "context": {
+    "now": "2026-10-27T10:00:00+03:00",
+    "timezone": "Europe/Istanbul"
+  },
+  "request": {
+    "queries": {
+      "q": {
+        "source": "order",
+        "fields": [
+          "code",
+          "labels"
+        ],
+        "filters": [
+          {
+            "column": "labels",
+            "op": "is_empty"
+          }
+        ]
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "results": {
+        "q": {
+          "rows": [
+            {
+              "id": 2,
+              "code": "SO-1002",
+              "labels": []
+            },
+            {
+              "id": 5,
+              "code": "SO-1005",
+              "labels": []
+            }
+          ],
+          "page": {
+            "number": 1,
+            "size": 50,
+            "hasMore": false
+          }
+        }
+      }
+    }
+  }
+}

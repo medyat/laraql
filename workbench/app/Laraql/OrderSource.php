@@ -47,7 +47,7 @@ final class OrderSource extends Source
             Column::text('note')
                 ->visibleWhen(fn (Context $context): bool => $context->user instanceof User && $context->user->name === 'admin')
                 ->describe('Internal note, staff (admin) only.'),
-            Column::tags('tags')->describe('Free labels such as export, vip, rush.'),
+            Column::multiselect('labels', ['export', 'vip', 'rush'])->describe('Order labels; a row may carry several.'),
             Column::user('owner_id')->describe('Owner user id; "@me" resolves to the current user.'),
             Column::int('lines_count')
                 ->expression('(select count(*) from order_lines where order_lines.order_id = orders.id)')

@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
         $dataset = json_decode((string) file_get_contents(__DIR__.'/../../../fixtures/v1/dataset.json'), true, 512, JSON_THROW_ON_ERROR);
 
         foreach ($dataset['rows']['order'] as $order) {
-            $order['tags'] = json_encode($order['tags']);
+            $order['labels'] = json_encode($order['labels']);
             $order['created_at'] = CarbonImmutable::parse($order['created_at'])->utc()->format('Y-m-d H:i:s');
             DB::table('orders')->insert($order);
         }

@@ -57,9 +57,9 @@ combinations the type does not support with `422`.
 | `eq` / `neq` | scalar | string, number, bool, date | Exact match. On `date`/`datetime` the day range in the request timezone |
 | `gt` `gte` `lt` `lte` | number | number, money, star | Numeric comparison |
 | `between` | `[min, max]` (either may be `null`) | number, money | Inclusive; a `null` edge makes it one-sided |
-| `contains` / `not_contains` | string | string, text, id, email, url, phone, tags | Case-insensitive substring; `%` and `_` are escaped |
+| `contains` / `not_contains` | string | string, text, id, email, url, phone | Case-insensitive substring; `%` and `_` are escaped |
 | `starts_with` / `ends_with` | string | string, text, id, email, phone | Case-insensitive prefix / suffix |
-| `in` / `not_in` | scalar[] (≤ `limits.in_values`) | select, id, user, color, multiselect, tags | Multi-valued columns: "contains any of" / "contains none of" |
+| `in` / `not_in` | scalar[] (≤ `limits.in_values`) | select, id, user, color, multiselect | Multi-valued columns: "contains any of" / "contains none of" |
 | `before` / `after` | ISO date or `{ "preset": "today" }` | date, datetime | Strict: `before 2026-10-05` excludes Oct 5 |
 | `within` | `{ "preset": … }` or `{ "from", "to" }` | date, datetime | Inclusive. Presets: `today`, `this_week`, `next_7_days`, `this_month`, `last_30_days`, `this_quarter`, `overdue` |
 | `is_empty` / `is_not_empty` | — | all | `NULL`; for text types also `''`; for lists also `[]` |

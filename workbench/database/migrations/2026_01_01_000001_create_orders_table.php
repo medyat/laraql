@@ -19,7 +19,7 @@ return new class extends Migration
             $table->date('due_date')->nullable();
             $table->timestamp('created_at')->nullable();
             $table->text('note')->nullable();
-            $table->json('tags')->nullable();
+            $table->json('labels')->nullable();
             $table->unsignedBigInteger('owner_id')->nullable();
         });
     }

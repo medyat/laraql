@@ -131,11 +131,6 @@ final class Column
         return $column;
     }
 
-    public static function tags(string $id): self
-    {
-        return new self($id, Type::Tags);
-    }
-
     public static function user(string $id): self
     {
         return new self($id, Type::User);
