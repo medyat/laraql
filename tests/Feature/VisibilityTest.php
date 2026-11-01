@@ -36,7 +36,7 @@ function visibilitySource(): Source
             return Order::class;
         }
 
-        public function columns(): array
+        public function columns(Context $context): array
         {
             $admin = fn (Context $context): bool => $context->user instanceof User && $context->user->name === 'admin';
 

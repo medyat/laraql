@@ -11,6 +11,7 @@ use Medyat\Laraql\Source\Source;
 final readonly class Query
 {
     /**
+     * @param  array<string, Column>  $columns  The source's columns for this request
      * @param  'rows'|'count'  $kind
      * @param  list<Column>|null  $fields  null = every column of the source
      * @param  list<Condition>  $filters
@@ -19,9 +20,11 @@ final readonly class Query
      * @param  array<string, IncludeQuery>  $include
      * @param  list<string>  $options
      * @param  array<string, mixed>  $params  Validated values keyed by the declared param names
+     * @param  list<string>  $ignored  Request paths of unknown columns skipped in fields and sort
      */
     public function __construct(
         public Source $source,
+        public array $columns,
         public string $kind,
         public ?array $fields,
         public array $filters,
@@ -31,5 +34,6 @@ final readonly class Query
         public array $include,
         public array $options,
         public array $params,
+        public array $ignored = [],
     ) {}
 }

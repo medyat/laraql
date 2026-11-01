@@ -29,6 +29,7 @@ final readonly class QueryCompiler
     public function __construct(private FilterCompiler $filters) {}
 
     /**
+     * @param  array<string, Column>  $columns  The source's columns for this request.
      * @param  list<Column>  $select  Columns the sub-query must expose (output + filter/sort/relation keys).
      * @param  list<Condition>  $conditions
      * @param  list<Sort>  $sort
@@ -36,7 +37,7 @@ final readonly class QueryCompiler
      * @param  list<string>  $options
      * @return Builder<Model>
      */
-    public function build(Source $source, array $select, array $conditions, array $sort, array $searchTokens, array $options, Input $input): Builder
+    public function build(Source $source, array $columns, array $select, array $conditions, array $sort, array $searchTokens, array $options, Input $input): Builder
     {
         $table = $source->table();
         $inner = $source->newModel()->newQuery();
@@ -50,7 +51,7 @@ final readonly class QueryCompiler
             }
         }
 
-        $searchable = $searchTokens === [] ? [] : $source->searchableColumns($input);
+        $searchable = $searchTokens === [] ? [] : $source->searchableColumns($columns, $input);
         $this->applyJoins($inner, $source, [...$select, ...array_map(fn (Condition $c): Column => $c->column, $conditions), ...$searchable], $input);
         $inner->select(array_map(fn (Column $column) => $this->selectExpression($column, $table), $select));
 
@@ -88,7 +89,7 @@ final readonly class QueryCompiler
             }
         }
 
-        $this->orderBy($outer, $sort, $source->keyColumn());
+        $this->orderBy($outer, $sort, $columns[$source->key()]);
 
         return $outer;
     }

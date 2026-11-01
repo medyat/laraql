@@ -57,7 +57,7 @@ final class OrderSource extends Source
 
     public function describe(): ?string { return 'Sales orders.'; }
 
-    public function columns(): array
+    public function columns(Context $context): array
     {
         return [
             Column::id('code')->searchable()->describe('Order number, unique.'),
@@ -113,9 +113,13 @@ for every rows query and returned only when requested.
 
 A column some users must not see (prices for users without `show_price`) is
 marked `->visibleWhen(fn (Context $c) => …)`: to the others it does not exist
-(422 when named, absent from omitted `fields`, skipped by search). The
-predicate runs per request; `columns()` itself is built once per process and
-must not read request state.
+(absent from omitted `fields`, skipped by search). An unknown or hidden column in
+`fields` or `sort` is skipped and listed in the result's `ignored`; in `filters` it
+is a 422, because dropping a filter would return too many rows.
+
+`columns()` is resolved once per query and nothing keeps its result, so it may
+depend on the request: a tenant's own variables can be added as columns. Sources
+are shared across requests; keep request state out of their properties.
 
 `defaultSort()` (`['position' => 'asc']`) orders queries that send no `sort`;
 the primary key still breaks ties.

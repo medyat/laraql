@@ -17,7 +17,10 @@ use Medyat\Laraql\Source\Source;
  * Turns a raw query array into a Query, or throws InvalidQueryException with
  * every problem keyed by its path (`filters.2.op`). Shape and semantics are
  * checked together: a column must exist, be filterable and accept the
- * operator, and the value must fit the operator.
+ * operator, and the value must fit the operator. The exception is an unknown
+ * column in `fields` or `sort`: a saved view can outlive a column, and skipping
+ * it leaves the matching rows intact, so it is listed in `ignored` instead. A
+ * filter is never skipped, that would return more rows than were asked for.
  */
 final class Validator
 {
@@ -26,6 +29,12 @@ final class Validator
     private const array INCLUDE_KEYS = ['fields', 'filters', 'sort', 'limit', 'include'];
 
     private Context $context;
+
+    /** @var array<class-string<Source>, array<string, Column>> Column lists of the query being validated, one per source. */
+    private array $columnMaps = [];
+
+    /** @var list<string> Request paths skipped in the query being validated. */
+    private array $ignored = [];
 
     /** @param  array<string, mixed>  $limits  The `laraql.limits` config. */
     public function __construct(
@@ -37,6 +46,8 @@ final class Validator
     public function validate(array $raw, Source $source, Context $context): Query
     {
         $this->context = $context;
+        $this->columnMaps = [];
+        $this->ignored = [];
         $errors = new Errors;
         $this->unknownKeys($raw, self::QUERY_KEYS, '', $errors);
 
@@ -49,6 +60,7 @@ final class Validator
 
         $query = new Query(
             source: $source,
+            columns: $this->columnMap($source),
             kind: $kind,
             fields: $this->fields($raw['fields'] ?? null, $source, 'fields', $errors),
             filters: $this->filters($raw['filters'] ?? [], $source, 'filters', $errors),
@@ -58,6 +70,7 @@ final class Validator
             include: $this->include($raw['include'] ?? [], $source, 'include', 1, $errors),
             options: $this->options($raw['options'] ?? [], $source, 'options', $errors),
             params: $this->params($raw['params'] ?? [], $source, 'params', $errors),
+            ignored: $this->ignored,
         );
 
         $errors->throwIfAny();
@@ -97,7 +110,7 @@ final class Validator
             $column = $this->column($id, $source);
 
             if ($column === null) {
-                $errors->add("{$path}.{$i}", 'unknown_column', ['column' => is_scalar($id) ? (string) $id : '?', 'source' => $source->name()]);
+                $this->skipOrReject($id, "{$path}.{$i}", "{$path}.{$i}", $source, $errors);
 
                 continue;
             }
@@ -280,7 +293,7 @@ final class Validator
             $column = $this->column($id, $source);
 
             if ($column === null) {
-                $errors->add("{$path}.{$i}.column", 'unknown_column', ['column' => is_scalar($id) ? (string) $id : '?', 'source' => $source->name()]);
+                $this->skipOrReject($id, "{$path}.{$i}", "{$path}.{$i}.column", $source, $errors);
 
                 continue;
             }
@@ -315,7 +328,7 @@ final class Validator
         $sorts = [];
 
         foreach ($source->defaultSort() as $id => $dir) {
-            $column = $source->column($id) ?? throw new LogicException("Source [{$source->name()}] default sort uses undeclared column [{$id}].");
+            $column = $this->columnMap($source)[$id] ?? throw new LogicException("Source [{$source->name()}] default sort uses undeclared column [{$id}].");
             $sorts[] = new Sort($column, $dir);
         }
 
@@ -374,7 +387,7 @@ final class Validator
             return [];
         }
 
-        if ($source->searchableColumns($this->context) === []) {
+        if ($source->searchableColumns($this->columnMap($source), $this->context) === []) {
             $errors->add('search', 'search_not_supported', ['source' => $source->name()]);
 
             return [];
@@ -451,6 +464,7 @@ final class Validator
                 name: $name,
                 relation: $relation,
                 source: $related,
+                columns: $this->columnMap($related),
                 fields: $this->fields($entry['fields'] ?? null, $related, "{$entryPath}.fields", $errors),
                 filters: $this->filters($entry['filters'] ?? [], $related, "{$entryPath}.filters", $errors),
                 sort: $this->sort($entry['sort'] ?? [], $related, "{$entryPath}.sort", $errors),
@@ -529,9 +543,27 @@ final class Validator
     /** The column behind an id as this request's user sees it; hidden columns are unknown to them. */
     private function column(mixed $id, Source $source): ?Column
     {
-        $column = is_string($id) ? $source->column($id) : null;
+        $column = is_string($id) ? ($this->columnMap($source)[$id] ?? null) : null;
 
         return $column !== null && $column->visible($this->context) ? $column : null;
+    }
+
+    /** A string id is a column that no longer exists for this request; anything else is a malformed query. */
+    private function skipOrReject(mixed $id, string $path, string $errorPath, Source $source, Errors $errors): void
+    {
+        if (is_string($id)) {
+            $this->ignored[] = $path;
+
+            return;
+        }
+
+        $errors->add($errorPath, 'unknown_column', ['column' => is_scalar($id) ? (string) $id : '?', 'source' => $source->name()]);
+    }
+
+    /** @return array<string, Column> */
+    private function columnMap(Source $source): array
+    {
+        return $this->columnMaps[$source::class] ??= $source->columnMap($this->context);
     }
 
     private function limit(string $key): int

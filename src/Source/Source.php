@@ -22,9 +22,6 @@ use Medyat\Laraql\Input;
  */
 abstract class Source
 {
-    /** @var array<string, Column>|null */
-    private ?array $columnMap = null;
-
     /** The key clients use in `source`. */
     abstract public function name(): string;
 
@@ -32,12 +29,14 @@ abstract class Source
     abstract public function model(): string;
 
     /**
-     * Built once per process and cached: never read request state here. Use
-     * `Column::visibleWhen()` for per-user visibility.
+     * Resolved once per query and never kept: sources are shared across requests
+     * and tenants, so the list may depend on the request (columns generated from
+     * tenant-defined variables). `Column::visibleWhen()` stays the way to hide a
+     * declared column from some users.
      *
      * @return list<Column>
      */
-    abstract public function columns(): array;
+    abstract public function columns(Context $context): array;
 
     /** One or two sentences for clients and agents: what a row is and when to query this source. */
     public function describe(): ?string
@@ -152,19 +151,15 @@ abstract class Source
     }
 
     /**
-     * Columns by id; the key column is added when not declared.
+     * Columns by id for this request; the key column is added when not declared.
      *
      * @return array<string, Column>
      */
-    public function columnMap(): array
+    public function columnMap(Context $context): array
     {
-        if ($this->columnMap !== null) {
-            return $this->columnMap;
-        }
-
         $map = [];
 
-        foreach ($this->columns() as $column) {
+        foreach ($this->columns($context) as $column) {
             if (isset($map[$column->id])) {
                 throw new LogicException("Source [{$this->name()}] declares column [{$column->id}] twice.");
             }
@@ -179,26 +174,17 @@ abstract class Source
             $map = [$key => $keyColumn] + $map;
         }
 
-        return $this->columnMap = $map;
-    }
-
-    public function column(string $id): ?Column
-    {
-        return $this->columnMap()[$id] ?? null;
-    }
-
-    public function keyColumn(): Column
-    {
-        return $this->columnMap()[$this->key()];
+        return $map;
     }
 
     /**
      * Searchable columns the request's user may see.
      *
+     * @param  array<string, Column>  $columns  This request's `columnMap()`.
      * @return list<Column>
      */
-    public function searchableColumns(Context $context): array
+    public function searchableColumns(array $columns, Context $context): array
     {
-        return array_values(array_filter($this->columnMap(), fn (Column $column): bool => $column->searchable && $column->visible($context)));
+        return array_values(array_filter($columns, fn (Column $column): bool => $column->searchable && $column->visible($context)));
     }
 }

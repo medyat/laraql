@@ -1,6 +1,6 @@
 {
   "name": "visibility-hidden-column",
-  "description": "note is visible to admin only (Column::visibleWhen). To ayse the column does not exist: naming it in fields, filters or sort is 422 unknown column, and it is absent when fields is omitted.",
+  "description": "note is visible to admin only (Column::visibleWhen). To ayse the column does not exist: in fields and sort it is skipped and listed in ignored, in filters it is 422 unknown column, and it is absent when fields is omitted.",
   "context": {
     "now": "2026-10-27T10:00:00+03:00",
     "timezone": "Europe/Istanbul",
@@ -13,6 +13,13 @@
         "fields": [
           "code",
           "note"
+        ],
+        "filters": [
+          {
+            "column": "code",
+            "op": "eq",
+            "value": "SO-1001"
+          }
         ]
       },
       "in_filter": {
@@ -37,6 +44,13 @@
             "column": "note",
             "dir": "asc"
           }
+        ],
+        "filters": [
+          {
+            "column": "code",
+            "op": "eq",
+            "value": "SO-1001"
+          }
         ]
       },
       "all_fields": {
@@ -56,16 +70,20 @@
     "body": {
       "results": {
         "in_fields": {
-          "error": {
-            "status": 422,
-            "code": "invalid_query",
-            "message": "The query is invalid.",
-            "details": {
-              "fields.1": [
-                "Unknown column \"note\" on source \"order\"."
-              ]
+          "rows": [
+            {
+              "id": 1,
+              "code": "SO-1001"
             }
-          }
+          ],
+          "page": {
+            "number": 1,
+            "size": 50,
+            "hasMore": false
+          },
+          "ignored": [
+            "fields.1"
+          ]
         },
         "in_filter": {
           "error": {
@@ -80,16 +98,20 @@
           }
         },
         "in_sort": {
-          "error": {
-            "status": 422,
-            "code": "invalid_query",
-            "message": "The query is invalid.",
-            "details": {
-              "sort.0.column": [
-                "Unknown column \"note\" on source \"order\"."
-              ]
+          "rows": [
+            {
+              "id": 1,
+              "code": "SO-1001"
             }
-          }
+          ],
+          "page": {
+            "number": 1,
+            "size": 50,
+            "hasMore": false
+          },
+          "ignored": [
+            "sort.0"
+          ]
         },
         "all_fields": {
           "rows": [

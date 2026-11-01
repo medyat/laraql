@@ -6,6 +6,7 @@ namespace Workbench\App\Laraql;
 
 use Illuminate\Database\Eloquent\Builder;
 use Medyat\Laraql\Column\Column;
+use Medyat\Laraql\Context;
 use Medyat\Laraql\Input;
 use Medyat\Laraql\Source\Source;
 use Workbench\App\Models\OrderLine;
@@ -23,7 +24,7 @@ final class OrderLineSource extends Source
         return OrderLine::class;
     }
 
-    public function columns(): array
+    public function columns(Context $context): array
     {
         return [
             Column::int('id'),

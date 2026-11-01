@@ -41,7 +41,7 @@ function probeSource(): Source
             return Order::class;
         }
 
-        public function columns(): array
+        public function columns(Context $context): array
         {
             return [Column::int('id'), Column::id('code'), Column::int('lines_qty')->from('t.qty')];
         }

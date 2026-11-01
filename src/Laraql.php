@@ -64,9 +64,11 @@ final readonly class Laraql
 
         $query = $this->validator->validate($raw, $source, $context);
 
-        return $query->kind === 'count'
+        $result = $query->kind === 'count'
             ? ['total' => $this->executor->count($query, $context)]
             : $this->executor->rows($query, $context);
+
+        return $query->ignored === [] ? $result : $result + ['ignored' => $query->ignored];
     }
 
     public function registry(): Registry

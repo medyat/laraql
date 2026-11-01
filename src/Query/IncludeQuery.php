@@ -12,6 +12,7 @@ use Medyat\Laraql\Source\Source;
 final readonly class IncludeQuery
 {
     /**
+     * @param  array<string, Column>  $columns  The related source's columns for this request
      * @param  list<Column>|null  $fields  null = every column of the related source
      * @param  list<Condition>  $filters
      * @param  list<Sort>  $sort
@@ -21,6 +22,7 @@ final readonly class IncludeQuery
         public string $name,
         public Relation $relation,
         public Source $source,
+        public array $columns,
         public ?array $fields,
         public array $filters,
         public array $sort,

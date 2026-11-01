@@ -490,6 +490,14 @@
               "type": "boolean"
             }
           }
+        },
+        "ignored": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "description": "Request paths of unknown columns skipped in fields and sort; present only when something was skipped."
         }
       }
     },
@@ -503,6 +511,14 @@
         "total": {
           "type": "integer",
           "minimum": 0
+        },
+        "ignored": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "description": "Request paths of unknown columns skipped in fields and sort; present only when something was skipped."
         }
       }
     },

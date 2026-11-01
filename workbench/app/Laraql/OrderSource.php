@@ -34,7 +34,7 @@ final class OrderSource extends Source
         return 'Sales orders. Query here for order headers; use the lines relation or the order_line source for products on an order.';
     }
 
-    public function columns(): array
+    public function columns(Context $context): array
     {
         return [
             Column::int('id'),

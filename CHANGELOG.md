@@ -16,7 +16,7 @@ Everything below ships as the first pre-release, `v0.1.0`.
 - Typed sources: `Column::{int,float,money,…,date,datetime,json}` with per-type operators, `searchable()`, `expression()`, `from()` through declared `joins()`, `describe()`.
 - `Source` with relations (`include`), options (`Option::scope|load|decorate`), params (`params()`), scope and decorator hooks, policy-based authorization; integer and string/UUID keys. Hooks receive an `Input` (user, params, requested field ids).
 - `Column::always()`: selected on every rows query (not returned unless requested) so decorators can read it whatever `fields` says.
-- `Column::visibleWhen()`: per-user visibility evaluated per request; a hidden column is unknown to that user (422), absent from omitted `fields` and skipped by search. `Source::authorize()` takes the `Context`.
+- `Column::visibleWhen()`: per-user visibility evaluated per request; a hidden column is unknown to that user, absent from omitted `fields` and skipped by search. Unknown columns in `fields` and `sort` are skipped and listed in `ignored`; in `filters` they are 422. `Source::authorize()` takes the `Context`.
 - `Source::defaultSort()`: the order used when a query (or an include) sends no `sort`; the key remains the tie-breaker.
 - `Option::load()` takes the `with()` array form for constrained eager loads; the outer query ignores the model's own `$with`, so eager loads come only from load options.
 - `Source::alwaysJoin()`: joins applied to every query (for conditions in `scope()`), never duplicated when a column uses the same key.

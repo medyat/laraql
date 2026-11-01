@@ -29,7 +29,7 @@ This repository is a Laravel package. Keep the package focused, idiomatic, and e
 ## Project Rules
 
 - The product is the protocol: `docs/protocol.md` is the contract, `schema/laraql-v1.schema.json` validates it, `fixtures/v1/` holds request/response pairs. Change the protocol first, then the code; never the other way round.
-- Columns are typed on the server (`Column::string`, `::date`, `::money`, …). Operator semantics depend on the column type; unknown columns, operators or options are 422, never silently dropped.
+- Columns are typed on the server (`Column::string`, `::date`, `::money`, …). Operator semantics depend on the column type; unknown operators, options and filter columns are 422. Unknown columns in `fields` and `sort` are skipped and reported in the result's `ignored`, never dropped silently: they cannot change which rows match, a dropped filter can.
 - Keep the core free of application concerns: tenant columns, ability flags, photos and user-specific scopes come from hooks (`Source::scope()`, `Source::decorators()`, `options`).
 - Requires PHP 8.4+ and Laravel 13+. Property hooks and asymmetric visibility are fine.
 - SQLite is the fast loop; dialect-specific behaviour (ILIKE, JSON paths, casts) is covered by the PostgreSQL CI job. Do not write SQL that only one of them understands without a dialect switch.

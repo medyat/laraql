@@ -209,8 +209,8 @@ final class Column
 
     /**
      * Show the column only when the predicate holds for the request; to other
-     * users it does not exist (422 when named, absent from omitted `fields`,
-     * skipped by search). Runs per request, so `columns()` stays static.
+     * users it does not exist (treated as an unknown column, absent from omitted
+     * `fields`, skipped by search).
      *
      * @param  Closure(Context): bool  $when
      */

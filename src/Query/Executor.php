@@ -31,15 +31,15 @@ final readonly class Executor
     /** @return array{rows: list<array<string, mixed>>, page: array{number: int, size: int, hasMore: bool}} */
     public function rows(Query $query, Context $context): array
     {
-        $output = $this->output($query->source, $query->fields, $context);
+        $output = $this->output($query->source, $query->columns, $query->fields, $context);
         $input = new Input($context, $query->params, $this->ids($output));
-        $select = $this->select($query->source, $output, $query->filters, $query->sort, array_map(
-            fn (IncludeQuery $include): Column => $this->localKey($query->source, $include),
+        $select = $this->select($query->columns, $output, $query->filters, $query->sort, array_map(
+            fn (IncludeQuery $include): Column => $this->localKey($query->source, $query->columns, $include),
             array_values($query->include),
         ));
 
         $models = $this->compiler
-            ->build($query->source, $select, $query->filters, $query->sort, $query->searchTokens, $query->options, $input)
+            ->build($query->source, $query->columns, $select, $query->filters, $query->sort, $query->searchTokens, $query->options, $input)
             ->offset($query->page->offset())
             ->limit($query->page->size + 1)
             ->get();
@@ -48,7 +48,7 @@ final readonly class Executor
         $models = $models->take($query->page->size);
 
         $rows = $this->formatAll($models, $output, $query->source, $query->options, $input);
-        $this->attachIncludes($rows, $models, $query->source, $query->include, $context);
+        $this->attachIncludes($rows, $models, $query->source, $query->columns, $query->include, $context);
 
         return [
             'rows' => $rows,
@@ -58,10 +58,10 @@ final readonly class Executor
 
     public function count(Query $query, Context $context): int
     {
-        $select = $this->select($query->source, [$query->source->keyColumn()], $query->filters, [], []);
+        $select = $this->select($query->columns, [$query->columns[$query->source->key()]], $query->filters, [], []);
 
         return $this->compiler
-            ->build($query->source, $select, $query->filters, [], $query->searchTokens, $query->options, new Input($context, $query->params))
+            ->build($query->source, $query->columns, $select, $query->filters, [], $query->searchTokens, $query->options, new Input($context, $query->params))
             ->count();
     }
 
@@ -77,34 +77,36 @@ final readonly class Executor
     /**
      * Output columns: the key first, then the requested fields (or every column the user may see).
      *
+     * @param  array<string, Column>  $columns
      * @param  list<Column>|null  $fields
      * @return list<Column>
      */
-    private function output(Source $source, ?array $fields, Context $context): array
+    private function output(Source $source, array $columns, ?array $fields, Context $context): array
     {
-        $columns = [$source->keyColumn()];
+        $output = [$columns[$source->key()]];
 
-        foreach ($fields ?? array_filter($source->columnMap(), fn (Column $column): bool => $column->visible($context)) as $column) {
+        foreach ($fields ?? array_filter($columns, fn (Column $column): bool => $column->visible($context)) as $column) {
             if ($column->id !== $source->key()) {
-                $columns[] = $column;
+                $output[] = $column;
             }
         }
 
-        return $columns;
+        return $output;
     }
 
     /**
      * Columns the sub-query must expose: output + filtered + sorted + relation keys + those marked `always()`, each once.
      *
+     * @param  array<string, Column>  $columns
      * @param  list<Column>  $output
      * @param  list<Condition>  $filters
      * @param  list<Sort>  $sort
      * @param  list<Column>  $extra
      * @return list<Column>
      */
-    private function select(Source $source, array $output, array $filters, array $sort, array $extra): array
+    private function select(array $columns, array $output, array $filters, array $sort, array $extra): array
     {
-        $always = array_values(array_filter($source->columnMap(), fn (Column $column): bool => $column->always));
+        $always = array_values(array_filter($columns, fn (Column $column): bool => $column->always));
         $byId = [];
 
         foreach ([...$output, ...array_map(fn (Condition $c): Column => $c->column, $filters), ...array_map(fn (Sort $s): Column => $s->column, $sort), ...$extra, ...$always] as $column) {
@@ -145,27 +147,28 @@ final readonly class Executor
      *
      * @param  list<array<string, mixed>>  $rows
      * @param  Collection<int, Model>  $models
+     * @param  array<string, Column>  $columns
      * @param  array<string, IncludeQuery>  $includes
      */
-    private function attachIncludes(array &$rows, Collection $models, Source $source, array $includes, Context $context): void
+    private function attachIncludes(array &$rows, Collection $models, Source $source, array $columns, array $includes, Context $context): void
     {
         foreach ($includes as $include) {
-            $localKey = $this->localKey($source, $include);
-            $foreignKey = $include->source->column($include->relation->foreignKey)
+            $localKey = $this->localKey($source, $columns, $include);
+            $foreignKey = $include->columns[$include->relation->foreignKey]
                 ?? throw new LogicException("Relation [{$include->name}] of source [{$source->name()}] points at undeclared column [{$include->relation->foreignKey}].");
 
             $parentKeys = $models->map(fn (Model $model): mixed => $model->getAttribute($localKey->alias()))->filter()->unique()->values()->all();
-            $output = $this->output($include->source, $include->fields, $context);
+            $output = $this->output($include->source, $include->columns, $include->fields, $context);
             $input = new Input($context, [], $this->ids($output));
             $filters = [...$include->filters, new Condition($foreignKey, Op::In, $parentKeys)];
-            $select = $this->select($include->source, $output, $filters, $include->sort, [
+            $select = $this->select($include->columns, $output, $filters, $include->sort, [
                 $foreignKey,
-                ...array_map(fn (IncludeQuery $nested): Column => $this->localKey($include->source, $nested), array_values($include->include)),
+                ...array_map(fn (IncludeQuery $nested): Column => $this->localKey($include->source, $include->columns, $nested), array_values($include->include)),
             ]);
 
             $related = $parentKeys === []
                 ? new Collection
-                : $this->compiler->build($include->source, $select, $filters, $include->sort, [], [], $input)->get();
+                : $this->compiler->build($include->source, $include->columns, $select, $filters, $include->sort, [], [], $input)->get();
 
             $grouped = $related->groupBy(fn (Model $model): string => Raw::string($model->getAttribute($foreignKey->alias())));
 
@@ -174,17 +177,18 @@ final readonly class Executor
                 /** @var Collection<int, Model> $children */
                 $children = ($grouped[$parent] ?? new Collection)->take($include->limit)->values();
                 $childRows = $this->formatAll($children, $output, $include->source, [], $input);
-                $this->attachIncludes($childRows, $children, $include->source, $include->include, $context);
+                $this->attachIncludes($childRows, $children, $include->source, $include->columns, $include->include, $context);
                 $rows[$i][$include->name] = $childRows;
             }
         }
     }
 
-    private function localKey(Source $source, IncludeQuery $include): Column
+    /** @param  array<string, Column>  $columns */
+    private function localKey(Source $source, array $columns, IncludeQuery $include): Column
     {
         $id = $include->relation->localKey ?? $source->key();
 
-        return $source->column($id)
+        return $columns[$id]
             ?? throw new LogicException("Relation [{$include->name}] of source [{$source->name()}] uses undeclared local key [{$id}].");
     }
 }

@@ -102,9 +102,32 @@ Blank search is ignored. More than `limits.search_tokens` tokens is `422`
 
 A source may show a column to some users only
 (`Column::visibleWhen(fn (Context $c) => …)`). To anyone else the column does
-not exist: naming it in `fields`, `filters`, `sort` or an `include` is `422`
-(unknown column), it is absent when `fields` is omitted, and search skips it.
-Access to the source as a whole is still `authorize()`.
+not exist: it follows the unknown column rules below, it is absent when `fields`
+is omitted, and search skips it. Access to the source as a whole is still
+`authorize()`.
+
+A source's column list is itself resolved per query
+(`columns(Context $context)`), so it may differ between users or tenants, for
+example columns generated from tenant-defined variables. A column the list does
+not contain for this request behaves exactly like a hidden one. Nothing about
+the list outlives the query.
+
+### Unknown columns
+
+A saved view can outlive a column: a tenant deletes a variable, a user loses a
+permission. How the server answers depends on what a missing column would do to
+the result:
+
+| Where | Answer | Why |
+|---|---|---|
+| `fields`, `sort` | Skipped and listed in the result's `ignored` | The rows stay correct; a column is missing or the order falls back to the default |
+| `filters` | `422` | Dropping a filter returns more rows than the client asked for |
+
+The same applies inside `include`. `ignored` holds request paths
+(`["fields.3", "sort.0", "include.lines.fields.1"]`) and is present only when
+something was skipped. It does not distinguish a hidden column from one that
+never existed. A sort on a column that exists but is not sortable is still `422`,
+and so is an id that is not a string.
 
 ### Result
 
@@ -113,6 +136,7 @@ Access to the source as a whole is still `authorize()`.
 | `rows` | `kind: rows` | `object[]`; dotted column ids are nested (`company.title` → `{ "company": { "title" } }`) |
 | `page` | `kind: rows` | `{ number, size, hasMore }`; `hasMore` is computed by fetching `size + 1` rows, no count query runs |
 | `total` | `kind: count` | integer |
+| `ignored` | something was skipped, see Unknown columns | `string[]` of request paths |
 | `error` | the query failed | `{ status, code, message, details? }` with `status` 403 / 404 / 422 |
 
 A client that never asks for `kind: count` never pays for a count.
@@ -180,7 +204,7 @@ Per-query errors live inside `results` and never change the HTTP status:
 |---|---|---|---|
 | 404 | `unknown_source` | unknown source key | — |
 | 403 | `forbidden` | the source's policy denies `viewAny`, or an included source does | — |
-| 422 | `invalid_query` | unknown column / operator / option / relation, type–operator mismatch, limit exceeded | path → messages, e.g. `{ "filters.2.op": ["…"] }`, `{ "page.size": ["…"] }` |
+| 422 | `invalid_query` | unknown column in `filters`, unknown operator / option / relation, type–operator mismatch, limit exceeded | path → messages, e.g. `{ "filters.2.op": ["…"] }`, `{ "page.size": ["…"] }` |
 
 Envelope-level problems are the only non-200 answers and carry a single
 `error` object instead of `results`:

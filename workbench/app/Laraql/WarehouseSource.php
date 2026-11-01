@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Workbench\App\Laraql;
 
 use Medyat\Laraql\Column\Column;
+use Medyat\Laraql\Context;
 use Medyat\Laraql\Source\Source;
 use Workbench\App\Models\Warehouse;
 
@@ -21,7 +22,7 @@ final class WarehouseSource extends Source
         return Warehouse::class;
     }
 
-    public function columns(): array
+    public function columns(Context $context): array
     {
         return [
             Column::id('code')->searchable(),

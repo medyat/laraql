@@ -1,0 +1,109 @@
+{
+  "name": "unknown-column-ignored",
+  "description": "Unknown columns in fields and sort are skipped and listed in ignored. In filters they are 422: dropping a filter would return too many rows.",
+  "context": {
+    "now": "2026-10-27T10:00:00+03:00",
+    "timezone": "Europe/Istanbul"
+  },
+  "request": {
+    "queries": {
+      "in_fields": {
+        "source": "order",
+        "fields": [
+          "code",
+          "nope"
+        ],
+        "filters": [
+          {
+            "column": "code",
+            "op": "eq",
+            "value": "SO-1001"
+          }
+        ]
+      },
+      "in_sort": {
+        "source": "order",
+        "fields": [
+          "code"
+        ],
+        "filters": [
+          {
+            "column": "code",
+            "op": "eq",
+            "value": "SO-1001"
+          }
+        ],
+        "sort": [
+          {
+            "column": "nope",
+            "dir": "asc"
+          }
+        ]
+      },
+      "in_filter": {
+        "source": "order",
+        "fields": [
+          "code"
+        ],
+        "filters": [
+          {
+            "column": "nope",
+            "op": "eq",
+            "value": "x"
+          }
+        ]
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "results": {
+        "in_fields": {
+          "rows": [
+            {
+              "id": 1,
+              "code": "SO-1001"
+            }
+          ],
+          "page": {
+            "number": 1,
+            "size": 50,
+            "hasMore": false
+          },
+          "ignored": [
+            "fields.1"
+          ]
+        },
+        "in_sort": {
+          "rows": [
+            {
+              "id": 1,
+              "code": "SO-1001"
+            }
+          ],
+          "page": {
+            "number": 1,
+            "size": 50,
+            "hasMore": false
+          },
+          "ignored": [
+            "sort.0"
+          ]
+        },
+        "in_filter": {
+          "error": {
+            "status": 422,
+            "code": "invalid_query",
+            "message": "The query is invalid.",
+            "details": {
+              "filters.0.column": [
+                "Unknown column \"nope\" on source \"order\"."
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}
