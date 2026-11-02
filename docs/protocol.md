@@ -55,14 +55,19 @@ combinations the type does not support with `422`.
 | `op` | Value | Types | Semantics |
 |---|---|---|---|
 | `eq` / `neq` | scalar | string, number, bool, date | Exact match. On `date`/`datetime` the day range in the request timezone |
-| `gt` `gte` `lt` `lte` | number | number, money, star | Numeric comparison |
-| `between` | `[min, max]` (either may be `null`) | number, money | Inclusive; a `null` edge makes it one-sided |
+| `gt` `gte` `lt` `lte` | number; on money also a decimal string | number, money, star | Numeric comparison |
+| `between` | `[min, max]` (either may be `null`); on money also decimal strings | number, money | Inclusive; a `null` edge makes it one-sided |
 | `contains` / `not_contains` | string | string, text, id, email, url, phone | Case-insensitive substring; `%` and `_` are escaped |
 | `starts_with` / `ends_with` | string | string, text, id, email, phone | Case-insensitive prefix / suffix |
 | `in` / `not_in` | scalar[] (≤ `limits.in_values`) | select, id, user, color, multiselect | Multi-valued columns: "contains any of" / "contains none of" |
 | `before` / `after` | ISO date or `{ "preset": "today" }` | date, datetime | Strict: `before 2026-10-05` excludes Oct 5 |
 | `within` | `{ "preset": … }` or `{ "from", "to" }` | date, datetime | Inclusive. Presets: `today`, `this_week`, `next_7_days`, `this_month`, `last_30_days`, `this_quarter`, `overdue` |
 | `is_empty` / `is_not_empty` | — | all | `NULL`; for text types also `''`; for lists also `[]` |
+
+Money values may be sent as decimal strings (`"300.50"`), the form money is
+answered in, so a client can send back what it read without a float in
+between; a JSON number is accepted too. A decimal string is an optional `-`,
+digits and an optional `.` with digits; anything else is a `422`.
 
 On `user` columns the value `"@me"` (with `eq`, `neq`, `in`, `not_in`) stands
 for the authenticated user's id, so a saved filter "owner is me" works for
@@ -72,7 +77,7 @@ Presets and day ranges are resolved on the server in the **request
 timezone**, so saved filters stay relative. The timezone travels as the
 `X-Timezone` header (name configurable, `laraql.timezone.header`); without it
 the application's `app.timezone` applies. An unknown zone name is an
-envelope-level `422 invalid_request` (`details.timezone`). All queries in a
+envelope-level `422 invalid_request` (`errors.timezone`). All queries in a
 batch share the same timezone.
 
 ### Search
@@ -89,7 +94,7 @@ WHERE (code ILIKE '%ege%'  OR customer ILIKE '%ege%')
 ```
 
 Blank search is ignored. More than `limits.search_tokens` tokens is `422`
-(`details.search`). A source without searchable columns rejects `search` with
+(`errors.search`). A source without searchable columns rejects `search` with
 `422`. `search` and `filters` combine with AND.
 
 ### Sort
@@ -137,7 +142,7 @@ and so is an id that is not a string.
 | `page` | `kind: rows` | `{ number, size, hasMore }`; `hasMore` is computed by fetching `size + 1` rows, no count query runs |
 | `total` | `kind: count` | integer |
 | `ignored` | something was skipped, see Unknown columns | `string[]` of request paths |
-| `error` | the query failed | `{ status, code, message, details? }` with `status` 403 / 404 / 422 |
+| `error` | the query failed | an RFC 9457 problem object, see Errors |
 
 A client that never asks for `kind: count` never pays for a count.
 
@@ -198,28 +203,72 @@ match.
 
 ## Errors
 
-Per-query errors live inside `results` and never change the HTTP status:
+Errors are [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) problem
+objects:
 
-| `status` | `code` | When | `details` |
-|---|---|---|---|
-| 404 | `unknown_source` | unknown source key | — |
-| 403 | `forbidden` | the source's policy denies `viewAny`, or an included source does | — |
-| 422 | `invalid_query` | unknown column in `filters`, unknown operator / option / relation, type–operator mismatch, limit exceeded | path → messages, e.g. `{ "filters.2.op": ["…"] }`, `{ "page.size": ["…"] }` |
+| Member | Content |
+|---|---|
+| `type` | `https://github.com/medyat/laraql/blob/production/docs/protocol.md#` + the type name below; links to its heading here. Clients compare the whole string |
+| `title` | Fixed short name of the type (`Invalid query`); localizable, never varies otherwise |
+| `status` | The HTTP status the problem stands for |
+| `detail` | Human-readable explanation of this occurrence |
+| `errors` | Only when there are path-level problems: request path → messages, e.g. `{ "filters.2.op": ["…"] }`, `{ "page.size": ["…"] }` |
 
-Envelope-level problems are the only non-200 answers and carry a single
-`error` object instead of `results`:
+A per-query problem sits under the query's key as `error` and never changes
+the HTTP status (`200`); its siblings are answered normally:
 
-| HTTP | `code` | When |
-|---|---|---|
-| 401 | `unauthenticated` | the application's auth middleware rejected the request |
-| 422 | `invalid_request` | no `queries`, an empty map, more than `limits.queries_per_request` queries, or a body that is not an object |
+```json
+{ "results": { "orders": { "error": {
+  "type": "https://github.com/medyat/laraql/blob/production/docs/protocol.md#invalid_query",
+  "title": "Invalid query",
+  "status": 422,
+  "detail": "The query is invalid.",
+  "errors": { "filters.0.op": ["Operator \"contains\" is not allowed on column \"gross_total\" (money)."] }
+} } } }
+```
 
-Messages come from `lang/en/messages.php` and are publishable.
+An unusable envelope is the only non-200 answer from laraql: the body is the
+problem object itself (no `results`), sent as `application/problem+json`.
+
+`title`, `detail` and the messages in `errors` come from
+`lang/en/messages.php` and are publishable.
+
+### `unknown_source`
+
+`404`, per query: the `source` key is not registered.
+
+### `forbidden`
+
+`403`, per query: the source's `authorize()` denies the user, or an included
+source does.
+
+### `invalid_query`
+
+`422`, per query, with `errors`: unknown column in `filters`, unknown operator
+/ option / relation / param, type–operator mismatch, an unfit value, a limit
+exceeded.
+
+### `invalid_request`
+
+`422`, envelope, with `errors`: no `queries`, an empty map, a query key that is
+not an identifier, more than `limits.queries_per_request` queries, an unknown
+timezone (`errors.timezone`), or a body that is not an object.
+
+### Authentication
+
+`401` comes from the application's authentication middleware, not from
+laraql, so its body is the application's. An application serving laraql
+clients should answer it as a problem object as well.
 
 ## Value representation
 
-- `int` → JSON integer; `float`, `money`, `percentage` → JSON number (the
-  server casts database decimals); `bool` → JSON boolean.
+- `int` → JSON integer; `float`, `percentage` → JSON number (the server
+  casts database decimals); `bool` → JSON boolean.
+- `money` → JSON string: a decimal with exactly the column's scale (default 2,
+  `Column::money(…)->scale(n)`), `.` as separator, no exponent and no
+  grouping: `"300.50"`, `"-12.00"`. Exact database decimals are rounded half
+  up to the scale as text, never through a float; the answer is the same on
+  every database.
 - `date` → `YYYY-MM-DD`; `datetime` → ISO 8601 in UTC with `Z`.
 - Empty values are `null`; text columns may also hold `''`, list columns `[]`.
 - Dotted column ids are nested in rows: `company.title` → `{ "company": { "title": "…" } }`.

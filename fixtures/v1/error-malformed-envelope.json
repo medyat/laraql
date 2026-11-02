@@ -1,6 +1,6 @@
 {
   "name": "error-malformed-envelope",
-  "description": "A body without `queries` is rejected as a whole with HTTP 422; the body is a plain validation error, not a results envelope.",
+  "description": "A body without `queries` is rejected as a whole with HTTP 422; the body is the problem object itself, not a results envelope.",
   "context": {
     "now": "2026-10-27T10:00:00+03:00",
     "timezone": "Europe/Istanbul"
@@ -11,15 +11,14 @@
   "response": {
     "status": 422,
     "body": {
-      "error": {
-        "status": 422,
-        "code": "invalid_request",
-        "message": "The request is invalid.",
-        "details": {
-          "queries": [
-            "At least one query is required."
-          ]
-        }
+      "type": "https://github.com/medyat/laraql/blob/production/docs/protocol.md#invalid_request",
+      "title": "Invalid request",
+      "status": 422,
+      "detail": "The request is invalid.",
+      "errors": {
+        "queries": [
+          "At least one query is required."
+        ]
       }
     }
   }

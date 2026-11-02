@@ -25,10 +25,11 @@
       "results": {
         "q": {
           "error": {
+            "type": "https://github.com/medyat/laraql/blob/production/docs/protocol.md#invalid_query",
+            "title": "Invalid query",
             "status": 422,
-            "code": "invalid_query",
-            "message": "The query is invalid.",
-            "details": {
+            "detail": "The query is invalid.",
+            "errors": {
               "filters.0.column": [
                 "Column \"lines_count\" cannot be filtered."
               ]

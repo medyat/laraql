@@ -18,9 +18,10 @@
       "results": {
         "q": {
           "error": {
+            "type": "https://github.com/medyat/laraql/blob/production/docs/protocol.md#unknown_source",
+            "title": "Unknown source",
             "status": 404,
-            "code": "unknown_source",
-            "message": "Unknown source \"nope\"."
+            "detail": "Unknown source \"nope\"."
           }
         }
       }

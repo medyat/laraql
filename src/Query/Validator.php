@@ -238,10 +238,10 @@ final class Validator
     {
         return match ($op) {
             Op::Eq, Op::Neq => $column->type->isDate() ? $this->isDate($value) : is_scalar($value),
-            Op::Gt, Op::Gte, Op::Lt, Op::Lte => is_int($value) || is_float($value),
+            Op::Gt, Op::Gte, Op::Lt, Op::Lte => $this->isNumber($value, $column),
             Op::Between => is_array($value) && array_is_list($value) && count($value) === 2
-                && ($value[0] === null || is_int($value[0]) || is_float($value[0]))
-                && ($value[1] === null || is_int($value[1]) || is_float($value[1]))
+                && ($value[0] === null || $this->isNumber($value[0], $column))
+                && ($value[1] === null || $this->isNumber($value[1], $column))
                 && ! ($value[0] === null && $value[1] === null),
             Op::Contains, Op::NotContains, Op::StartsWith, Op::EndsWith => is_string($value) && $value !== '',
             Op::In, Op::NotIn => is_array($value) && array_is_list($value) && $value !== []
@@ -252,6 +252,13 @@ final class Validator
                 || (is_array($value) && array_keys($value) === ['from', 'to'] && $this->isDate($value['from']) && $this->isDate($value['to'])),
             Op::IsEmpty, Op::IsNotEmpty => true,
         };
+    }
+
+    /** A JSON number, or on money a decimal string (the form money is answered in). */
+    private function isNumber(mixed $value, Column $column): bool
+    {
+        return is_int($value) || is_float($value)
+            || ($column->type === Type::Money && is_string($value) && preg_match('/^-?\d+(\.\d+)?$/', $value) === 1);
     }
 
     private function isDate(mixed $value): bool
