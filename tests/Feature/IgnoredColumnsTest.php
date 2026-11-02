@@ -47,9 +47,9 @@ it('leaves ignored out when nothing was skipped', function (): void {
 });
 
 it('still rejects an id that is not a string', function (): void {
-    expect(queryOrders(['fields' => [1]])['error']['details'])->toHaveKey('fields.0');
+    expect(queryOrders(['fields' => [1]])['error']['errors'])->toHaveKey('fields.0');
 });
 
 it('still rejects a sort on a column that exists but is not sortable', function (): void {
-    expect(queryOrders(['sort' => [['column' => 'labels', 'dir' => 'asc']]])['error']['details'])->toHaveKey('sort.0.column');
+    expect(queryOrders(['sort' => [['column' => 'labels', 'dir' => 'asc']]])['error']['errors'])->toHaveKey('sort.0.column');
 });

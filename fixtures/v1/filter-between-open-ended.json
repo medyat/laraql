@@ -35,17 +35,17 @@
             {
               "id": 1,
               "code": "SO-1001",
-              "gross_total": 1250.0
+              "gross_total": "1250.00"
             },
             {
               "id": 4,
               "code": "SO-1004",
-              "gross_total": 4100.0
+              "gross_total": "4100.00"
             },
             {
               "id": 6,
               "code": "SO-1006",
-              "gross_total": 2200.0
+              "gross_total": "2200.00"
             }
           ],
           "page": {

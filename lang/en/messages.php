@@ -3,6 +3,12 @@
 declare(strict_types=1);
 
 return [
+    'titles' => [
+        'invalid_request' => 'Invalid request',
+        'invalid_query' => 'Invalid query',
+        'unknown_source' => 'Unknown source',
+        'forbidden' => 'Forbidden',
+    ],
     'invalid_request' => 'The request is invalid.',
     'invalid_query' => 'The query is invalid.',
     'forbidden' => 'This action is unauthorized.',

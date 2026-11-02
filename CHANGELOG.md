@@ -1,8 +1,15 @@
 # Release Notes
 
-## [Unreleased](https://github.com/medyat/laraql-php/commits/production/compare/0.1.0...HEAD)
+## [Unreleased](https://github.com/medyat/laraql/commits/production/compare/0.1.0...HEAD)
 
-## [0.1.0](https://github.com/medyat/laraql-php/commits/production/compare/production...0.1.0) - 2026-11-02
+Breaking: both changes alter the wire format; clients must be updated with the server.
+
+- Money is answered as a decimal string with exactly the column's scale (`"300.50"`), the same on every database; exact database decimals are rounded half up as text, never through a float. `Column::money(…)->scale(n)` sets the scale (default 2). Money filter values (`gt`, `gte`, `lt`, `lte`, `between`) also accept decimal strings.
+- Errors are RFC 9457 problem objects `{ type, title, status, detail, errors? }`. Per-query errors stay under `error` with HTTP 200; an unusable envelope answers the problem object itself as `application/problem+json`. `type` links to the error's heading in `docs/protocol.md`; `errors` replaces `details`, and `code` and `message` are gone. Titles are translatable under `laraql::messages.titles`.
+- The schema no longer lists `401`: authentication answers come from the application.
+- Repository renamed to `medyat/laraql`.
+
+## [0.1.0](https://github.com/medyat/laraql/commits/production/compare/production...0.1.0) - 2026-11-02
 
 Everything below ships as the first pre-release, `v0.1.0`.
 

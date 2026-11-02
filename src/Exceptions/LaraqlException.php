@@ -7,8 +7,8 @@ namespace Medyat\Laraql\Exceptions;
 use RuntimeException;
 
 /**
- * A per-query failure, rendered as `{ error: { status, code, message, details? } }`
- * inside the results envelope (docs/protocol.md · Errors).
+ * A failure rendered as an RFC 9457 problem object: under `error` inside the
+ * results envelope, or as the whole body for an envelope error (docs/protocol.md · Errors).
  */
 class LaraqlException extends RuntimeException
 {
@@ -22,16 +22,23 @@ class LaraqlException extends RuntimeException
         parent::__construct($message);
     }
 
-    /** @return array{status: int, code: string, message: string, details?: array<string, list<string>>} */
+    public const string TYPE_BASE = 'https://github.com/medyat/laraql/blob/production/docs/protocol.md#';
+
+    /** @return array{type: string, title: string, status: int, detail: string, errors?: array<string, list<string>>} */
     public function toArray(): array
     {
-        $error = ['status' => $this->status, 'code' => $this->errorCode, 'message' => $this->getMessage()];
+        $problem = [
+            'type' => self::TYPE_BASE.$this->errorCode,
+            'title' => self::message('titles.'.$this->errorCode),
+            'status' => $this->status,
+            'detail' => $this->getMessage(),
+        ];
 
         if ($this->details !== []) {
-            $error['details'] = $this->details;
+            $problem['errors'] = $this->details;
         }
 
-        return $error;
+        return $problem;
     }
 
     /** @param  array<string, scalar>  $params */

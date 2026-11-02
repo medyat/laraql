@@ -94,7 +94,7 @@ it('rejects a param value that does not fit the declared type under its path', f
     try {
         app(Validator::class)->validate(['source' => 'probe', 'params' => ['min_qty' => [4]]], probeSource(), $context);
     } catch (InvalidQueryException $e) {
-        expect($e->toArray()['details'])->toBe(['params.min_qty' => ['Invalid value for "params.min_qty".']]);
+        expect($e->toArray()['errors'])->toBe(['params.min_qty' => ['Invalid value for "params.min_qty".']]);
 
         return;
     }

@@ -36,6 +36,9 @@ final class Column
 
     public private(set) ?string $currency = null;
 
+    /** Fraction digits a money value is answered with. */
+    public private(set) int $scale = 2;
+
     /** @var list<string|int>|null */
     public private(set) ?array $options = null;
 
@@ -188,6 +191,18 @@ final class Column
         }
 
         $this->searchable = true;
+
+        return $this;
+    }
+
+    /** Fraction digits of a money column's answer (default 2). */
+    public function scale(int $scale): self
+    {
+        if ($this->type !== Type::Money || $scale < 0) {
+            throw new LogicException("Column [{$this->id}] cannot take scale [{$scale}]; only money columns take a scale of 0 or more.");
+        }
+
+        $this->scale = $scale;
 
         return $this;
     }

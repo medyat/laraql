@@ -19,9 +19,10 @@
       "results": {
         "q": {
           "error": {
+            "type": "https://github.com/medyat/laraql/blob/production/docs/protocol.md#forbidden",
+            "title": "Forbidden",
             "status": 403,
-            "code": "forbidden",
-            "message": "This action is unauthorized."
+            "detail": "This action is unauthorized."
           }
         }
       }

@@ -6,7 +6,7 @@
     <a href="https://packagist.org/packages/medyat/laraql"><img src="https://img.shields.io/packagist/v/medyat/laraql.svg?style=flat-square" alt="Packagist"></a>
     <a href="https://packagist.org/packages/medyat/laraql"><img src="https://img.shields.io/packagist/php-v/medyat/laraql.svg?style=flat-square" alt="PHP from Packagist"></a>
     <a href="https://packagist.org/packages/medyat/laraql"><img src="https://badge.laravel.cloud/badge/medyat/laraql?style=flat" alt="Laravel versions"></a>
-    <a href="https://github.com/medyat/laraql-php/actions"><img alt="GitHub Workflow Status (production)" src="https://img.shields.io/github/actions/workflow/status/medyat/laraql-php/tests.yml?branch=production&label=Tests&style=flat-square"></a>
+    <a href="https://github.com/medyat/laraql/actions"><img alt="GitHub Workflow Status (production)" src="https://img.shields.io/github/actions/workflow/status/medyat/laraql/tests.yml?branch=production&label=Tests&style=flat-square"></a>
     <a href="https://packagist.org/packages/medyat/laraql"><img src="https://img.shields.io/packagist/dt/medyat/laraql.svg?style=flat-square" alt="Total Downloads"></a>
 </p>
 

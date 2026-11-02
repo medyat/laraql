@@ -1,6 +1,6 @@
 {
   "name": "filter-lte-money",
-  "description": "lte.",
+  "description": "lte. A JSON number is still accepted as a money value.",
   "context": {
     "now": "2026-10-27T10:00:00+03:00",
     "timezone": "Europe/Istanbul"
@@ -32,12 +32,12 @@
             {
               "id": 2,
               "code": "SO-1002",
-              "gross_total": 300.5
+              "gross_total": "300.50"
             },
             {
               "id": 5,
               "code": "SO-1005",
-              "gross_total": 75.0
+              "gross_total": "75.00"
             }
           ],
           "page": {

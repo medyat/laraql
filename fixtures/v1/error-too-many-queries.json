@@ -138,15 +138,14 @@
   "response": {
     "status": 422,
     "body": {
-      "error": {
-        "status": 422,
-        "code": "invalid_request",
-        "message": "The request is invalid.",
-        "details": {
-          "queries": [
-            "Value for \"queries\" exceeds the limit of 20."
-          ]
-        }
+      "type": "https://github.com/medyat/laraql/blob/production/docs/protocol.md#invalid_request",
+      "title": "Invalid request",
+      "status": 422,
+      "detail": "The request is invalid.",
+      "errors": {
+        "queries": [
+          "Value for \"queries\" exceeds the limit of 20."
+        ]
       }
     }
   }

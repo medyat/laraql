@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/medyat/laraql-php/schema/laraql-v1.schema.json",
+  "$id": "https://github.com/medyat/laraql/schema/laraql-v1.schema.json",
   "title": "Laraql protocol v1",
   "description": "Request envelope (#/$defs/Request) and response envelope (#/$defs/Response). Limits (page size, filter count, …) are enforced by the server from config and are not part of the shape.",
   "oneOf": [
@@ -112,7 +112,14 @@
               ]
             },
             "value": {
-              "type": "number"
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "$ref": "#/$defs/Decimal"
+                }
+              ]
             },
             "currency": {
               "type": "string"
@@ -141,9 +148,16 @@
               "minItems": 2,
               "maxItems": 2,
               "items": {
-                "type": [
-                  "number",
-                  "null"
+                "anyOf": [
+                  {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  {
+                    "$ref": "#/$defs/Decimal"
+                  }
                 ]
               }
             },
@@ -533,11 +547,23 @@
           "type": "object",
           "additionalProperties": false,
           "required": [
+            "type",
+            "title",
             "status",
-            "code",
-            "message"
+            "detail"
           ],
+          "description": "RFC 9457 problem object for one failed query; the HTTP status stays 200.",
           "properties": {
+            "type": {
+              "enum": [
+                "https://github.com/medyat/laraql/blob/production/docs/protocol.md#invalid_query",
+                "https://github.com/medyat/laraql/blob/production/docs/protocol.md#unknown_source",
+                "https://github.com/medyat/laraql/blob/production/docs/protocol.md#forbidden"
+              ]
+            },
+            "title": {
+              "type": "string"
+            },
             "status": {
               "enum": [
                 403,
@@ -545,25 +571,20 @@
                 422
               ]
             },
-            "code": {
-              "enum": [
-                "invalid_query",
-                "unknown_source",
-                "forbidden"
-              ]
-            },
-            "message": {
+            "detail": {
               "type": "string"
             },
-            "details": {
+            "errors": {
               "type": "object",
+              "minProperties": 1,
               "additionalProperties": {
                 "type": "array",
                 "minItems": 1,
                 "items": {
                   "type": "string"
                 }
-              }
+              },
+              "description": "Request path → messages."
             }
           }
         }
@@ -655,7 +676,6 @@
             "status": {
               "enum": [
                 200,
-                401,
                 422
               ]
             },
@@ -677,47 +697,47 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "error"
+        "type",
+        "title",
+        "status",
+        "detail"
       ],
-      "description": "Returned with HTTP 401/422 when the envelope itself is unusable; no per-query results exist.",
+      "description": "RFC 9457 problem object (application/problem+json) returned with HTTP 422 when the envelope itself is unusable; no per-query results exist.",
       "properties": {
-        "error": {
+        "type": {
+          "enum": [
+            "https://github.com/medyat/laraql/blob/production/docs/protocol.md#invalid_request"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            422
+          ]
+        },
+        "detail": {
+          "type": "string"
+        },
+        "errors": {
           "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "status",
-            "code",
-            "message"
-          ],
-          "properties": {
-            "status": {
-              "enum": [
-                401,
-                422
-              ]
-            },
-            "code": {
-              "enum": [
-                "invalid_request",
-                "unauthenticated"
-              ]
-            },
-            "message": {
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
               "type": "string"
-            },
-            "details": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "array",
-                "minItems": 1,
-                "items": {
-                  "type": "string"
-                }
-              }
             }
-          }
+          },
+          "description": "Request path → messages."
         }
       }
+    },
+    "Decimal": {
+      "type": "string",
+      "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+      "description": "A decimal as text, the form money is answered in."
     }
   }
 }

@@ -26,7 +26,7 @@ final class QueryController
             $queries = $this->queries($request);
             $context = new Context($this->timezone($request), CarbonImmutable::now(), $request->user());
         } catch (InvalidRequestException $e) {
-            return new JsonResponse(['error' => $e->toArray()], $e->status);
+            return new JsonResponse($e->toArray(), $e->status, ['Content-Type' => 'application/problem+json']);
         }
 
         return new JsonResponse(['results' => $laraql->run($queries, $context)]);

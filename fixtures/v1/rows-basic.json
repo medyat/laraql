@@ -27,37 +27,37 @@
               "id": 1,
               "code": "SO-1001",
               "status": "released",
-              "gross_total": 1250.0
+              "gross_total": "1250.00"
             },
             {
               "id": 2,
               "code": "SO-1002",
               "status": "draft",
-              "gross_total": 300.5
+              "gross_total": "300.50"
             },
             {
               "id": 3,
               "code": "SO-1003",
               "status": "done",
-              "gross_total": 980.0
+              "gross_total": "980.00"
             },
             {
               "id": 4,
               "code": "SO-1004",
               "status": "released",
-              "gross_total": 4100.0
+              "gross_total": "4100.00"
             },
             {
               "id": 5,
               "code": "SO-1005",
               "status": "done",
-              "gross_total": 75.0
+              "gross_total": "75.00"
             },
             {
               "id": 6,
               "code": "SO-1006",
               "status": "draft",
-              "gross_total": 2200.0
+              "gross_total": "2200.00"
             }
           ],
           "page": {

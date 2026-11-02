@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Opis\JsonSchema\Errors\ErrorFormatter;
 use Opis\JsonSchema\Validator;
 
-const LARAQL_SCHEMA_ID = 'https://github.com/medyat/laraql-php/schema/laraql-v1.schema.json';
+const LARAQL_SCHEMA_ID = 'https://github.com/medyat/laraql/schema/laraql-v1.schema.json';
 
 /**
  * @return list<string>
