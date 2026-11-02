@@ -1,6 +1,8 @@
 # Release Notes
 
-## [Unreleased](https://github.com/medyat/laraql-php/commits/production)
+## [Unreleased](https://github.com/medyat/laraql-php/commits/production/compare/0.1.0...HEAD)
+
+## [0.1.0](https://github.com/medyat/laraql-php/commits/production/compare/production...0.1.0) - 2026-11-02
 
 Everything below ships as the first pre-release, `v0.1.0`.
 
