@@ -1,6 +1,8 @@
 # Release Notes
 
-## [Unreleased](https://github.com/medyat/laraql/commits/production/compare/0.1.0...HEAD)
+## [Unreleased](https://github.com/medyat/laraql/commits/production/compare/0.2.0...HEAD)
+
+## [0.2.0](https://github.com/medyat/laraql/commits/production/compare/0.1.0...0.2.0) - 2026-11-02
 
 Breaking: both changes alter the wire format; clients must be updated with the server.
 
