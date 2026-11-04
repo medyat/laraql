@@ -1,0 +1,56 @@
+{
+  "name": "filter-in-string",
+  "description": "in on a string column: exact, case-sensitive match like eq.",
+  "context": {
+    "now": "2026-10-27T10:00:00+03:00",
+    "timezone": "Europe/Istanbul"
+  },
+  "request": {
+    "queries": {
+      "q": {
+        "source": "order",
+        "fields": [
+          "customer"
+        ],
+        "filters": [
+          {
+            "column": "customer",
+            "op": "in",
+            "value": [
+              "Ege Tarim Makine",
+              "Marmara Vinc"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "results": {
+        "q": {
+          "rows": [
+            {
+              "id": 1,
+              "customer": "Ege Tarim Makine"
+            },
+            {
+              "id": 4,
+              "customer": "Ege Tarim Makine"
+            },
+            {
+              "id": 5,
+              "customer": "Marmara Vinc"
+            }
+          ],
+          "page": {
+            "number": 1,
+            "size": 50,
+            "hasMore": false
+          }
+        }
+      }
+    }
+  }
+}

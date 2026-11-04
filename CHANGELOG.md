@@ -2,6 +2,8 @@
 
 ## [Unreleased](https://github.com/medyat/laraql/commits/production/compare/0.2.0...HEAD)
 
+- `in` / `not_in` are allowed on `string`, `email`, `url`, `phone` and `int` columns. On `int` the values must be integers; a string is a `422 invalid_query` instead of a database error.
+
 ## [0.2.0](https://github.com/medyat/laraql/commits/production/compare/0.1.0...0.2.0) - 2026-11-02
 
 Breaking: both changes alter the wire format; clients must be updated with the server.

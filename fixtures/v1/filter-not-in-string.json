@@ -1,0 +1,56 @@
+{
+  "name": "filter-not-in-string",
+  "description": "not_in on a string column.",
+  "context": {
+    "now": "2026-10-27T10:00:00+03:00",
+    "timezone": "Europe/Istanbul"
+  },
+  "request": {
+    "queries": {
+      "q": {
+        "source": "order",
+        "fields": [
+          "customer"
+        ],
+        "filters": [
+          {
+            "column": "customer",
+            "op": "not_in",
+            "value": [
+              "Ege Tarim Makine",
+              "Marmara Vinc"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "results": {
+        "q": {
+          "rows": [
+            {
+              "id": 2,
+              "customer": "Sakarya Romork"
+            },
+            {
+              "id": 3,
+              "customer": "Atlas Kaldirma"
+            },
+            {
+              "id": 6,
+              "customer": "Delta Forklift"
+            }
+          ],
+          "page": {
+            "number": 1,
+            "size": 50,
+            "hasMore": false
+          }
+        }
+      }
+    }
+  }
+}

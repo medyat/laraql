@@ -246,7 +246,8 @@ final class Validator
             Op::Contains, Op::NotContains, Op::StartsWith, Op::EndsWith => is_string($value) && $value !== '',
             Op::In, Op::NotIn => is_array($value) && array_is_list($value) && $value !== []
                 && count($value) <= $this->limit('in_values')
-                && array_all($value, fn (mixed $v): bool => is_string($v) || is_int($v)),
+                // A string on an int column would fail in the database, not here.
+                && array_all($value, fn (mixed $v): bool => is_int($v) || (is_string($v) && $column->type !== Type::Int)),
             Op::Before, Op::After => $this->isDate($value) || $value === ['preset' => 'today'],
             Op::Within => (is_array($value) && array_keys($value) === ['preset'] && is_string($value['preset']) && in_array($value['preset'], DateRange::PRESETS, true))
                 || (is_array($value) && array_keys($value) === ['from', 'to'] && $this->isDate($value['from']) && $this->isDate($value['to'])),

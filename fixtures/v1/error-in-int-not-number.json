@@ -1,0 +1,47 @@
+{
+  "name": "error-in-int-not-number",
+  "description": "in on an int column takes integers only; a string never reaches the database.",
+  "context": {
+    "now": "2026-10-27T10:00:00+03:00",
+    "timezone": "Europe/Istanbul"
+  },
+  "request": {
+    "queries": {
+      "q": {
+        "source": "order",
+        "fields": [
+          "code"
+        ],
+        "filters": [
+          {
+            "column": "id",
+            "op": "in",
+            "value": [
+              "abc"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "results": {
+        "q": {
+          "error": {
+            "type": "https://github.com/medyat/laraql/blob/production/docs/protocol.md#invalid_query",
+            "title": "Invalid query",
+            "status": 422,
+            "detail": "The query is invalid.",
+            "errors": {
+              "filters.0.value": [
+                "Invalid value for \"filters.0.value\"."
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

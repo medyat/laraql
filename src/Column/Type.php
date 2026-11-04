@@ -39,9 +39,12 @@ enum Type: string
         $empty = [Op::IsEmpty, Op::IsNotEmpty];
 
         return match ($this) {
-            self::Int, self::Float, self::Money, self::Percentage => [Op::Eq, Op::Neq, Op::Gt, Op::Gte, Op::Lt, Op::Lte, Op::Between, ...$empty],
+            self::Int => [Op::Eq, Op::Neq, Op::Gt, Op::Gte, Op::Lt, Op::Lte, Op::Between, Op::In, Op::NotIn, ...$empty],
+            // No in/not_in on decimals: exact equality on them is fragile.
+            self::Float, self::Money, self::Percentage => [Op::Eq, Op::Neq, Op::Gt, Op::Gte, Op::Lt, Op::Lte, Op::Between, ...$empty],
             self::Bool => [Op::Eq, ...$empty],
-            self::String, self::Text, self::Email, self::Url, self::Phone => [Op::Contains, Op::NotContains, Op::Eq, Op::Neq, Op::StartsWith, Op::EndsWith, ...$empty],
+            self::String, self::Email, self::Url, self::Phone => [Op::Contains, Op::NotContains, Op::Eq, Op::Neq, Op::StartsWith, Op::EndsWith, Op::In, Op::NotIn, ...$empty],
+            self::Text => [Op::Contains, Op::NotContains, Op::Eq, Op::Neq, Op::StartsWith, Op::EndsWith, ...$empty],
             self::Id => [Op::In, Op::NotIn, Op::Contains, Op::NotContains, Op::Eq, Op::Neq, Op::StartsWith, Op::EndsWith, ...$empty],
             self::Color, self::Select, self::User => [Op::Eq, Op::Neq, Op::In, Op::NotIn, ...$empty],
             self::Multiselect => [Op::In, Op::NotIn, ...$empty],

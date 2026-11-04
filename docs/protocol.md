@@ -59,7 +59,7 @@ combinations the type does not support with `422`.
 | `between` | `[min, max]` (either may be `null`); on money also decimal strings | number, money | Inclusive; a `null` edge makes it one-sided |
 | `contains` / `not_contains` | string | string, text, id, email, url, phone | Case-insensitive substring; `%` and `_` are escaped |
 | `starts_with` / `ends_with` | string | string, text, id, email, phone | Case-insensitive prefix / suffix |
-| `in` / `not_in` | scalar[] (≤ `limits.in_values`) | select, id, user, color, multiselect | Multi-valued columns: "contains any of" / "contains none of" |
+| `in` / `not_in` | scalar[] (≤ `limits.in_values`); on `int` integers only | select, id, user, color, multiselect, string, email, url, phone, int | Exact, case-sensitive match against any / none of the values, like `eq`. Multi-valued columns: "contains any of" / "contains none of". Not on `text` or decimals |
 | `before` / `after` | ISO date or `{ "preset": "today" }` | date, datetime | Strict: `before 2026-10-05` excludes Oct 5 |
 | `within` | `{ "preset": … }` or `{ "from", "to" }` | date, datetime | Inclusive. Presets: `today`, `this_week`, `next_7_days`, `this_month`, `last_30_days`, `this_quarter`, `overdue` |
 | `is_empty` / `is_not_empty` | — | all | `NULL`; for text types also `''`; for lists also `[]` |
