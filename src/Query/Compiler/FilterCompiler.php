@@ -61,7 +61,7 @@ final readonly class FilterCompiler
         foreach ($tokens as $token) {
             $query->where(function (Builder $group) use ($targets, $token): void {
                 foreach ($targets as $target) {
-                    $group->whereRaw($this->likeSql($group, $target, false), [mb_strtolower('%'.$this->escape($token).'%')], 'or');
+                    $group->whereRaw($this->likeSql($group, $target, false), ['%'.$this->escape($token).'%'], 'or');
                 }
             });
         }
@@ -115,12 +115,14 @@ final readonly class FilterCompiler
     /** @param  Builder<Model>  $query */
     private function like(Builder $query, string $target, string $pattern, bool $not): void
     {
-        $query->whereRaw($this->likeSql($query, $target, $not), [mb_strtolower($pattern)]);
+        $query->whereRaw($this->likeSql($query, $target, $not), [$pattern]);
     }
 
     /**
      * Portable case-insensitive LIKE: standard SQL only (LOWER, LIKE, ESCAPE),
-     * identifier wrapped by the grammar, value bound. `!` is the escape
+     * identifier wrapped by the grammar, value bound. Both sides go through the
+     * database's LOWER: PHP lowercases some letters differently ("İ" becomes
+     * "i" plus a combining dot), and the value would then never match. `!` is the escape
      * character because a backslash inside a string literal is itself an
      * escape on MySQL, and SQLite has no default escape at all.
      *
@@ -130,7 +132,7 @@ final readonly class FilterCompiler
     {
         $wrapped = $query->getQuery()->getGrammar()->wrap($target);
 
-        return Sql::raw('LOWER('.$wrapped.') '.($not ? 'NOT LIKE' : 'LIKE')." ? ESCAPE '!'");
+        return Sql::raw('LOWER('.$wrapped.') '.($not ? 'NOT LIKE' : 'LIKE')." LOWER(?) ESCAPE '!'");
     }
 
     /** User text is never a pattern: `%`, `_` and the escape character itself become literals. */

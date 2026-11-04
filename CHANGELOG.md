@@ -2,7 +2,7 @@
 
 ## [Unreleased](https://github.com/medyat/laraql/commits/production/compare/0.3.0...HEAD)
 
-- `in` / `not_in` are allowed on `string`, `email`, `url`, `phone` and `int` columns. On `int` the values must be integers; a string is a `422 invalid_query` instead of a database error.
+- Fixed: `contains`, `not_contains`, `starts_with`, `ends_with` and `search` lowercase the value in the database, like the column. PHP lowercased it before, and letters it lowercases differently never matched: `İSTANBUL` did not find `İSTANBUL`.
 
 ## [0.3.0](https://github.com/medyat/laraql/commits/production/compare/0.2.0...0.3.0) - 2026-11-04
 

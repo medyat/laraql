@@ -64,6 +64,10 @@ combinations the type does not support with `422`.
 | `within` | `{ "preset": … }` or `{ "from", "to" }` | date, datetime | Inclusive. Presets: `today`, `this_week`, `next_7_days`, `this_month`, `last_30_days`, `this_quarter`, `overdue` |
 | `is_empty` / `is_not_empty` | — | all | `NULL`; for text types also `''`; for lists also `[]` |
 
+Case-insensitive means the column and the value both go through the
+database's `LOWER`, so they always fold the same way. Which letters fold is the
+database's: PostgreSQL folds non-ASCII letters (`İ`, `Ş`), SQLite only ASCII.
+
 Money values may be sent as decimal strings (`"300.50"`), the form money is
 answered in, so a client can send back what it read without a float in
 between; a JSON number is accepted too. A decimal string is an optional `-`,
