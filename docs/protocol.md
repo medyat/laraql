@@ -54,9 +54,9 @@ combinations the type does not support with `422`.
 
 | `op` | Value | Types | Semantics |
 |---|---|---|---|
-| `eq` / `neq` | scalar | string, number, bool, date | Exact match. On `date`/`datetime` the day range in the request timezone |
-| `gt` `gte` `lt` `lte` | number; on money also a decimal string | number, money, star | Numeric comparison |
-| `between` | `[min, max]` (either may be `null`); on money also decimal strings | number, money | Inclusive; a `null` edge makes it one-sided |
+| `eq` / `neq` | scalar; on numbers a number like `gt` | string, number, bool, date | Exact match. On `date`/`datetime` the day range in the request timezone |
+| `gt` `gte` `lt` `lte` | number (on `int` an integer); on money also a decimal string | number, money, star | Numeric comparison |
+| `between` | `[min, max]` (either may be `null`), values as for `gt` | number, money | Inclusive; a `null` edge makes it one-sided |
 | `contains` / `not_contains` | string | string, text, id, email, url, phone | Case-insensitive substring; `%` and `_` are escaped |
 | `starts_with` / `ends_with` | string | string, text, id, email, phone | Case-insensitive prefix / suffix |
 | `in` / `not_in` | scalar[] (≤ `limits.in_values`); on `int` integers only | select, id, user, color, multiselect, string, email, url, phone, int | Exact, case-sensitive match against any / none of the values, like `eq`. Multi-valued columns: "contains any of" / "contains none of". Not on `text` or decimals |

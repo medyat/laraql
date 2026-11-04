@@ -237,7 +237,11 @@ final class Validator
     private function valueFits(Op $op, Column $column, mixed $value): bool
     {
         return match ($op) {
-            Op::Eq, Op::Neq => $column->type->isDate() ? $this->isDate($value) : is_scalar($value),
+            Op::Eq, Op::Neq => match (true) {
+                $column->type->isDate() => $this->isDate($value),
+                $column->type->isNumeric() => $this->isNumber($value, $column),
+                default => is_scalar($value),
+            },
             Op::Gt, Op::Gte, Op::Lt, Op::Lte => $this->isNumber($value, $column),
             Op::Between => is_array($value) && array_is_list($value) && count($value) === 2
                 && ($value[0] === null || $this->isNumber($value[0], $column))
@@ -255,10 +259,10 @@ final class Validator
         };
     }
 
-    /** A JSON number, or on money a decimal string (the form money is answered in). */
+    /** A JSON number (on int an integer), or on money a decimal string (the form money is answered in). */
     private function isNumber(mixed $value, Column $column): bool
     {
-        return is_int($value) || is_float($value)
+        return is_int($value) || (is_float($value) && $column->type !== Type::Int)
             || ($column->type === Type::Money && is_string($value) && preg_match('/^-?\d+(\.\d+)?$/', $value) === 1);
     }
 
