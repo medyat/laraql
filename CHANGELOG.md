@@ -1,6 +1,13 @@
 # Release Notes
 
-## [Unreleased](https://github.com/medyat/laraql/commits/production/compare/0.3.0...HEAD)
+## [Unreleased](https://github.com/medyat/laraql/commits/production/compare/0.3.1...HEAD)
+
+- Fixed: `contains`, `not_contains`, `starts_with`, `ends_with` and `search` lowercase the value in the database, like the column. PHP lowercased it before, and letters it lowercases differently never matched: `İSTANBUL` did not find `İSTANBUL`.
+- Fixed: on numeric columns `eq` and `neq` take a number, and on `int` every comparison (`eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `between`) takes an integer. `between [33.2, null]` on an int column or `eq "abc"` on money is a `422 invalid_query`; PostgreSQL answered it with a database error.
+
+## [0.3.1](https://github.com/medyat/laraql/commits/production/compare/0.3.0...0.3.1) - 2026-11-05
+
+Two fixes; the wire format does not change.
 
 - Fixed: `contains`, `not_contains`, `starts_with`, `ends_with` and `search` lowercase the value in the database, like the column. PHP lowercased it before, and letters it lowercases differently never matched: `İSTANBUL` did not find `İSTANBUL`.
 - Fixed: on numeric columns `eq` and `neq` take a number, and on `int` every comparison (`eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `between`) takes an integer. `between [33.2, null]` on an int column or `eq "abc"` on money is a `422 invalid_query`; PostgreSQL answered it with a database error.
