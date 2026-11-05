@@ -33,10 +33,13 @@ final readonly class Executor
     {
         $output = $this->output($query->source, $query->columns, $query->fields, $context);
         $input = new Input($context, $query->params, $this->ids($output));
-        $select = $this->select($query->columns, $output, $query->filters, $query->sort, array_map(
-            fn (IncludeQuery $include): Column => $this->localKey($query->source, $query->columns, $include),
-            array_values($query->include),
-        ));
+        $select = $this->select($query->columns, $output, $query->filters, $query->sort, [
+            ...array_map(
+                fn (IncludeQuery $include): Column => $this->localKey($query->source, $query->columns, $include),
+                array_values($query->include),
+            ),
+            ...$this->searchedOnOuter($query, $context),
+        ]);
 
         $models = $this->compiler
             ->build($query->source, $query->columns, $select, $query->filters, $query->sort, $query->searchTokens, $query->options, $input)
@@ -58,11 +61,28 @@ final readonly class Executor
 
     public function count(Query $query, Context $context): int
     {
-        $select = $this->select($query->columns, [$query->columns[$query->source->key()]], $query->filters, [], []);
+        $select = $this->select($query->columns, [$query->columns[$query->source->key()]], $query->filters, [], $this->searchedOnOuter($query, $context));
 
         return $this->compiler
             ->build($query->source, $query->columns, $select, $query->filters, [], $query->searchTokens, $query->options, new Input($context, $query->params))
             ->count();
+    }
+
+    /**
+     * Searchable columns the outer query searches by alias: once one of them is an expression, the
+     * search cannot be pushed down (QueryCompiler::build()), so the sub-query must select them all.
+     *
+     * @return list<Column>
+     */
+    private function searchedOnOuter(Query $query, Context $context): array
+    {
+        if ($query->searchTokens === []) {
+            return [];
+        }
+
+        $searchable = $query->source->searchableColumns($query->columns, $context);
+
+        return array_all($searchable, fn (Column $column): bool => $column->pushable()) ? [] : $searchable;
     }
 
     /**

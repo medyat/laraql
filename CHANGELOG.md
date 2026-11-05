@@ -2,6 +2,7 @@
 
 ## [Unreleased](https://github.com/medyat/laraql/commits/production/compare/0.3.1...HEAD)
 
+- Fixed: a `search` over a source with a searchable expression column found nothing (SQLite) or answered a database error (PostgreSQL, MySQL) when a searchable column was not in `fields`, and so did `kind: count` with a search. The search runs on the outer query then, so the sub-query now selects every searchable column.
 - Fixed: `contains`, `not_contains`, `starts_with`, `ends_with` and `search` lowercase the value in the database, like the column. PHP lowercased it before, and letters it lowercases differently never matched: `İSTANBUL` did not find `İSTANBUL`.
 - Fixed: on numeric columns `eq` and `neq` take a number, and on `int` every comparison (`eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `between`) takes an integer. `between [33.2, null]` on an int column or `eq "abc"` on money is a `422 invalid_query`; PostgreSQL answered it with a database error.
 
