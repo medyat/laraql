@@ -1,6 +1,8 @@
 # Release Notes
 
-## [Unreleased](https://github.com/medyat/laraql/commits/production/compare/0.3.1...HEAD)
+## [Unreleased](https://github.com/medyat/laraql/commits/production/compare/0.3.2...HEAD)
+
+## [0.3.2](https://github.com/medyat/laraql/commits/production/compare/0.3.1...0.3.2) - 2026-11-05
 
 - Fixed: a `search` over a source with a searchable expression column found nothing (SQLite) or answered a database error (PostgreSQL, MySQL) when a searchable column was not in `fields`, and so did `kind: count` with a search. The search runs on the outer query then, so the sub-query now selects every searchable column.
 - Fixed: `contains`, `not_contains`, `starts_with`, `ends_with` and `search` lowercase the value in the database, like the column. PHP lowercased it before, and letters it lowercases differently never matched: `İSTANBUL` did not find `İSTANBUL`.
