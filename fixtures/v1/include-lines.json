@@ -86,7 +86,7 @@
           "page": {
             "number": 1,
             "size": 50,
-            "hasMore": false
+            "has_more": false
           }
         }
       }

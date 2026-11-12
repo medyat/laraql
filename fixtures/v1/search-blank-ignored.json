@@ -38,7 +38,7 @@
           "page": {
             "number": 1,
             "size": 2,
-            "hasMore": true
+            "has_more": true
           }
         }
       }

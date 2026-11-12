@@ -43,7 +43,7 @@
           "page": {
             "number": 1,
             "size": 1,
-            "hasMore": true
+            "has_more": true
           }
         },
         "bad": {

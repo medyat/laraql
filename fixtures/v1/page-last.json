@@ -1,6 +1,6 @@
 {
   "name": "page-last",
-  "description": "Last page: hasMore false.",
+  "description": "Last page: has_more false.",
   "context": {
     "now": "2026-10-27T10:00:00+03:00",
     "timezone": "Europe/Istanbul"
@@ -37,7 +37,7 @@
           "page": {
             "number": 3,
             "size": 2,
-            "hasMore": false
+            "has_more": false
           }
         }
       }

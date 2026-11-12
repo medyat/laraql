@@ -18,7 +18,7 @@ use Medyat\Laraql\Source\Source;
 use Medyat\Laraql\Support\Raw;
 
 /**
- * Runs a validated query: rows (with `hasMore` from one extra row and the
+ * Runs a validated query: rows (with `has_more` from one extra row and the
  * includes attached per parent) or a count.
  */
 final readonly class Executor
@@ -28,7 +28,7 @@ final readonly class Executor
         private RowFormatter $formatter,
     ) {}
 
-    /** @return array{rows: list<array<string, mixed>>, page: array{number: int, size: int, hasMore: bool}} */
+    /** @return array{rows: list<array<string, mixed>>, page: array{number: int, size: int, has_more: bool}} */
     public function rows(Query $query, Context $context): array
     {
         $output = $this->output($query->source, $query->columns, $query->fields, $context);
@@ -55,7 +55,7 @@ final readonly class Executor
 
         return [
             'rows' => $rows,
-            'page' => ['number' => $query->page->number, 'size' => $query->page->size, 'hasMore' => $hasMore],
+            'page' => ['number' => $query->page->number, 'size' => $query->page->size, 'has_more' => $hasMore],
         ];
     }
 

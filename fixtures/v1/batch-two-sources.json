@@ -46,7 +46,7 @@
           "page": {
             "number": 1,
             "size": 1,
-            "hasMore": true
+            "has_more": true
           }
         },
         "lines": {
@@ -59,7 +59,7 @@
           "page": {
             "number": 1,
             "size": 50,
-            "hasMore": false
+            "has_more": false
           }
         }
       }

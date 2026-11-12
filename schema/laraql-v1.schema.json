@@ -489,7 +489,7 @@
           "required": [
             "number",
             "size",
-            "hasMore"
+            "has_more"
           ],
           "properties": {
             "number": {
@@ -500,7 +500,7 @@
               "type": "integer",
               "minimum": 1
             },
-            "hasMore": {
+            "has_more": {
               "type": "boolean"
             }
           }

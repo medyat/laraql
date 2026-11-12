@@ -14,13 +14,16 @@ adapters test against. Change this document before changing code.
 - Authentication is the application's: add middleware in `config/laraql.php`.
 - The request is a **batch**: several queries travel together and are
   answered under the same keys. One query failing never fails its siblings.
+- Every key the protocol defines is `snake_case`, in the request and in the
+  response (`has_more`, `not_contains`). Query keys and row keys are the
+  application's.
 
 ```json
 { "queries": { "orders": { "source": "order", "fields": ["code", "gross_total"] } } }
 ```
 
 ```json
-{ "results": { "orders": { "rows": [ { "id": 1, "code": "SO-1", "gross_total": "120.00" } ], "page": { "number": 1, "size": 50, "hasMore": false } } } }
+{ "results": { "orders": { "rows": [ { "id": 1, "code": "SO-1", "gross_total": "120.00" } ], "page": { "number": 1, "size": 50, "has_more": false } } } }
 ```
 
 HTTP status is `200` whenever the envelope itself was valid; per-query
@@ -143,7 +146,7 @@ and so is an id that is not a string.
 | Field | Present when | Shape |
 |---|---|---|
 | `rows` | `kind: rows` | `object[]`; dotted column ids are nested (`company.title` → `{ "company": { "title" } }`) |
-| `page` | `kind: rows` | `{ number, size, hasMore }`; `hasMore` is computed by fetching `size + 1` rows, no count query runs |
+| `page` | `kind: rows` | `{ number, size, has_more }`; `has_more` is computed by fetching `size + 1` rows, no count query runs |
 | `total` | `kind: count` | integer |
 | `ignored` | something was skipped, see Unknown columns | `string[]` of request paths |
 | `error` | the query failed | an RFC 9457 problem object, see Errors |
