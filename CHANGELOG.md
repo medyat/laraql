@@ -2,6 +2,9 @@
 
 ## [Unreleased](https://github.com/medyat/laraql/commits/production/compare/0.3.2...HEAD)
 
+- Breaking: the page answers `page.has_more` instead of `page.hasMore`; every key the protocol defines is snake_case.
+- Added: `Column::guard('price', fn (Context $c) => …)` names a visibility rule once, `->guardedBy('price')` applies it to a column. An undefined name throws.
+
 ## [0.3.2](https://github.com/medyat/laraql/commits/production/compare/0.3.1...0.3.2) - 2026-11-05
 
 - Fixed: a `search` over a source with a searchable expression column found nothing (SQLite) or answered a database error (PostgreSQL, MySQL) when a searchable column was not in `fields`, and so did `kind: count` with a search. The search runs on the outer query then, so the sub-query now selects every searchable column.

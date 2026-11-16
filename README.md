@@ -117,6 +117,19 @@ marked `->visibleWhen(fn (Context $c) => …)`: to the others it does not exist
 `fields` or `sort` is skipped and listed in the result's `ignored`; in `filters` it
 is a 422, because dropping a filter would return too many rows.
 
+When one rule hides columns across sources (every amount for users without
+`show_price`), name it once at boot and mark the columns with the name:
+
+```php
+Column::guard('price', fn (Context $c) => (bool) $c->user?->show_price);
+
+Column::money('total', 'currency')->guardedBy('price');
+```
+
+A guarded column follows the same rules as a `visibleWhen()` one; with both,
+both must hold. A name no `Column::guard()` defines throws when the column is
+checked, so a typo fails in tests rather than leaking or hiding the column.
+
 `columns()` is resolved once per query and nothing keeps its result, so it may
 depend on the request: a tenant's own variables can be added as columns. Sources
 are shared across requests; keep request state out of their properties.

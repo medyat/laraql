@@ -34,6 +34,12 @@ final class Column
     /** @var Closure(Context): bool|null */
     private ?Closure $visibleWhen = null;
 
+    /** Name of the `Column::guard()` rule that must also hold. */
+    public private(set) ?string $guardedBy = null;
+
+    /** @var array<string, Closure(Context): bool> */
+    private static array $guards = [];
+
     public private(set) ?string $currency = null;
 
     /** Fraction digits a money value is answered with. */
@@ -236,8 +242,40 @@ final class Column
         return $this;
     }
 
+    /**
+     * Define a named rule once, at boot, for every column `guardedBy()` it
+     * (`Column::guard('price', fn (Context $c) => $c->user?->show_price)`).
+     *
+     * @param  Closure(Context): bool  $when
+     */
+    public static function guard(string $name, Closure $when): void
+    {
+        self::$guards[$name] = $when;
+    }
+
+    /**
+     * Hide the column like `visibleWhen()`, by the rule defined under `$name`.
+     * The rule is looked up per request; an undefined name throws then, so a
+     * typo fails in tests instead of leaking or silently hiding the column.
+     */
+    public function guardedBy(string $name): self
+    {
+        $this->guardedBy = $name;
+
+        return $this;
+    }
+
     public function visible(Context $context): bool
     {
+        if ($this->guardedBy !== null) {
+            $guard = self::$guards[$this->guardedBy]
+                ?? throw new LogicException("Column [{$this->id}] is guarded by [{$this->guardedBy}], which no Column::guard() defines.");
+
+            if (! $guard($context)) {
+                return false;
+            }
+        }
+
         return $this->visibleWhen === null || ($this->visibleWhen)($context);
     }
 

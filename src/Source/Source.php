@@ -31,7 +31,7 @@ abstract class Source
     /**
      * Resolved once per query and never kept: sources are shared across requests
      * and tenants, so the list may depend on the request (columns generated from
-     * tenant-defined variables). `Column::visibleWhen()` stays the way to hide a
+     * tenant-defined variables). `Column::visibleWhen()` or `guardedBy()` stays the way to hide a
      * declared column from some users.
      *
      * @return list<Column>

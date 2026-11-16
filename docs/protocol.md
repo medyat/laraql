@@ -113,7 +113,8 @@ Blank search is ignored. More than `limits.search_tokens` tokens is `422`
 ### Visibility
 
 A source may show a column to some users only
-(`Column::visibleWhen(fn (Context $c) => …)`). To anyone else the column does
+(`Column::visibleWhen(fn (Context $c) => …)`, or a named rule shared by many
+columns, `Column::guardedBy('price')`). To anyone else the column does
 not exist: it follows the unknown column rules below, it is absent when `fields`
 is omitted, and search skips it. Access to the source as a whole is still
 `authorize()`.
