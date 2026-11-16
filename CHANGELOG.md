@@ -1,6 +1,13 @@
 # Release Notes
 
-## [Unreleased](https://github.com/medyat/laraql/commits/production/compare/0.3.2...HEAD)
+## [Unreleased](https://github.com/medyat/laraql/commits/production/compare/0.4.0...HEAD)
+
+## [0.4.0](https://github.com/medyat/laraql/commits/production/compare/0.3.2...0.4.0) - 2026-11-16
+
+Breaking: the page answer's key changes; clients must be updated with the server.
+
+- Breaking: the page answers `page.has_more` instead of `page.hasMore`; every key the protocol defines is snake_case.
+- Added: `Column::guard('price', fn (Context $c) => …)` names a visibility rule once, `->guardedBy('price')` applies it to a column. With `visibleWhen()` both must hold. An undefined name throws when the column is checked, so a typo fails in tests instead of leaking or hiding the column.
 
 ## [0.3.2](https://github.com/medyat/laraql/commits/production/compare/0.3.1...0.3.2) - 2026-11-05
 
