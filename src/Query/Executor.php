@@ -144,6 +144,7 @@ final readonly class Executor
      */
     private function formatAll(Collection $models, array $output, Source $source, array $options, Input $input): array
     {
+        $source->prepare($models, $input);
         $decorators = $source->decorators();
 
         foreach ($options as $name) {

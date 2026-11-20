@@ -111,6 +111,17 @@ A column a decorator reads but the client may leave out of `fields` (an
 ability flag computed from `status`) is marked `->always()`: it is selected
 for every rows query and returned only when requested.
 
+Decorators run per row. When they read a relation (a policy checking the row's
+company), load it for the whole page in `prepare()`, which runs once before
+them with the page's models; a decorator then never queries per row:
+
+```php
+public function prepare(Collection $models, Input $input): void
+{
+    $models->load('company:id,group_id');
+}
+```
+
 A column some users must not see (prices for users without `show_price`) is
 marked `->visibleWhen(fn (Context $c) => …)`: to the others it does not exist
 (absent from omitted `fields`, skipped by search). An unknown or hidden column in

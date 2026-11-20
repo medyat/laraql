@@ -2,6 +2,8 @@
 
 ## [Unreleased](https://github.com/medyat/laraql/commits/production/compare/0.4.0...HEAD)
 
+- Added: `Source::prepare()` runs once per page with the page's models, before the decorators, so relations they read load in bulk instead of per row.
+
 ## [0.4.0](https://github.com/medyat/laraql/commits/production/compare/0.3.2...0.4.0) - 2026-11-16
 
 Breaking: the page answer's key changes; clients must be updated with the server.

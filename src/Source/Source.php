@@ -6,6 +6,7 @@ namespace Medyat\Laraql\Source;
 
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
 use LogicException;
@@ -110,6 +111,15 @@ abstract class Source
      * @param  Builder<Model>  $query
      */
     public function scope(Builder $query, Input $input): void {}
+
+    /**
+     * Runs once per page, before the decorators, with the page's models: load
+     * in bulk what decorators read (a relation a policy checks), so they never
+     * query per row.
+     *
+     * @param  Collection<int, Model>  $models
+     */
+    public function prepare(Collection $models, Input $input): void {}
 
     /**
      * Add keys to every row (ability flags, computed fields).
