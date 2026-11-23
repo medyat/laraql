@@ -13,7 +13,7 @@ use Medyat\Laraql\Filter\Op;
 enum Type: string
 {
     case Int = 'int';
-    case Float = 'float';
+    case Decimal = 'decimal';
     case Money = 'money';
     case Percentage = 'percentage';
     case Bool = 'bool';
@@ -41,7 +41,7 @@ enum Type: string
         return match ($this) {
             self::Int => [Op::Eq, Op::Neq, Op::Gt, Op::Gte, Op::Lt, Op::Lte, Op::Between, Op::In, Op::NotIn, ...$empty],
             // No in/not_in on decimals: exact equality on them is fragile.
-            self::Float, self::Money, self::Percentage => [Op::Eq, Op::Neq, Op::Gt, Op::Gte, Op::Lt, Op::Lte, Op::Between, ...$empty],
+            self::Decimal, self::Money, self::Percentage => [Op::Eq, Op::Neq, Op::Gt, Op::Gte, Op::Lt, Op::Lte, Op::Between, ...$empty],
             self::Bool => [Op::Eq, ...$empty],
             self::String, self::Email, self::Url, self::Phone => [Op::Contains, Op::NotContains, Op::Eq, Op::Neq, Op::StartsWith, Op::EndsWith, Op::In, Op::NotIn, ...$empty],
             self::Text => [Op::Contains, Op::NotContains, Op::Eq, Op::Neq, Op::StartsWith, Op::EndsWith, ...$empty],
@@ -60,7 +60,13 @@ enum Type: string
 
     public function isNumeric(): bool
     {
-        return in_array($this, [self::Int, self::Float, self::Money, self::Percentage], true);
+        return in_array($this, [self::Int, self::Decimal, self::Money, self::Percentage], true);
+    }
+
+    /** Answered as a decimal string and filtered by one: every numeric type but int. */
+    public function isDecimal(): bool
+    {
+        return in_array($this, [self::Decimal, self::Money, self::Percentage], true);
     }
 
     public function isText(): bool

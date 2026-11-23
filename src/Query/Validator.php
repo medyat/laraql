@@ -259,11 +259,11 @@ final class Validator
         };
     }
 
-    /** A JSON number (on int an integer), or on money a decimal string (the form money is answered in). */
+    /** A JSON number (on int an integer), or on decimals a decimal string (the form they are answered in). */
     private function isNumber(mixed $value, Column $column): bool
     {
         return is_int($value) || (is_float($value) && $column->type !== Type::Int)
-            || ($column->type === Type::Money && is_string($value) && preg_match('/^-?\d+(\.\d+)?$/', $value) === 1);
+            || ($column->type->isDecimal() && is_string($value) && preg_match('/^-?\d+(\.\d+)?$/', $value) === 1);
     }
 
     private function isDate(mixed $value): bool

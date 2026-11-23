@@ -43,7 +43,8 @@ final class Column
     public private(set) ?string $currency = null;
 
     /** Fraction digits a money value is answered with. */
-    public private(set) int $scale = 2;
+    /** Fraction digits of a decimal answer; null keeps the database's own (money defaults to 2). */
+    public private(set) ?int $scale = null;
 
     /** @var list<string|int>|null */
     public private(set) ?array $options = null;
@@ -63,9 +64,10 @@ final class Column
         return new self($id, Type::Int);
     }
 
-    public static function float(string $id): self
+    /** An exact decimal (quantity, rate); answered as a decimal string, never through a float. */
+    public static function decimal(string $id): self
     {
-        return new self($id, Type::Float);
+        return new self($id, Type::Decimal);
     }
 
     /** @param  string|null  $currency  ISO code, or the id of the column holding it. */
@@ -73,6 +75,7 @@ final class Column
     {
         $column = new self($id, Type::Money);
         $column->currency = $currency;
+        $column->scale = 2;
 
         return $column;
     }
@@ -201,11 +204,11 @@ final class Column
         return $this;
     }
 
-    /** Fraction digits of a money column's answer (default 2). */
+    /** Fraction digits of a decimal answer (money, decimal, percentage); rounded half up as text. */
     public function scale(int $scale): self
     {
-        if ($this->type !== Type::Money || $scale < 0) {
-            throw new LogicException("Column [{$this->id}] cannot take scale [{$scale}]; only money columns take a scale of 0 or more.");
+        if (! $this->type->isDecimal() || $scale < 0) {
+            throw new LogicException("Column [{$this->id}] cannot take scale [{$scale}]; only decimal columns (money, decimal, percentage) take a scale of 0 or more.");
         }
 
         $this->scale = $scale;

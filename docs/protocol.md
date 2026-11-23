@@ -58,7 +58,7 @@ combinations the type does not support with `422`.
 | `op` | Value | Types | Semantics |
 |---|---|---|---|
 | `eq` / `neq` | scalar; on numbers a number like `gt` | string, number, bool, date | Exact match. On `date`/`datetime` the day range in the request timezone |
-| `gt` `gte` `lt` `lte` | number (on `int` an integer); on money also a decimal string | number, money, star | Numeric comparison |
+| `gt` `gte` `lt` `lte` | number (on `int` an integer); on decimals also a decimal string | number, money, star | Numeric comparison |
 | `between` | `[min, max]` (either may be `null`), values as for `gt` | number, money | Inclusive; a `null` edge makes it one-sided |
 | `contains` / `not_contains` | string | string, text, id, email, url, phone | Case-insensitive substring; `%` and `_` are escaped |
 | `starts_with` / `ends_with` | string | string, text, id, email, phone | Case-insensitive prefix / suffix |
@@ -71,9 +71,9 @@ Case-insensitive means the column and the value both go through the
 database's `LOWER`, so they always fold the same way. Which letters fold is the
 database's: PostgreSQL folds non-ASCII letters (`İ`, `Ş`), SQLite only ASCII.
 
-Money values may be sent as decimal strings (`"300.50"`), the form money is
-answered in, so a client can send back what it read without a float in
-between; a JSON number is accepted too. A decimal string is an optional `-`,
+Decimal values (`decimal`, `money`, `percentage`) may be sent as decimal
+strings (`"300.50"`), the form they are answered in, so a client can send back
+what it read without a float in between; a JSON number is accepted too. A decimal string is an optional `-`,
 digits and an optional `.` with digits; anything else is a `422`.
 
 On `user` columns the value `"@me"` (with `eq`, `neq`, `in`, `not_in`) stands
@@ -270,13 +270,14 @@ clients should answer it as a problem object as well.
 
 ## Value representation
 
-- `int` → JSON integer; `float`, `percentage` → JSON number (the server
-  casts database decimals); `bool` → JSON boolean.
-- `money` → JSON string: a decimal with exactly the column's scale (default 2,
-  `Column::money(…)->scale(n)`), `.` as separator, no exponent and no
-  grouping: `"300.50"`, `"-12.00"`. Exact database decimals are rounded half
-  up to the scale as text, never through a float; the answer is the same on
-  every database.
+- `int` → JSON integer; `bool` → JSON boolean.
+- `decimal`, `money`, `percentage` → JSON string, never a JSON number: `.` as
+  separator, no exponent and no grouping: `"300.50"`, `"-12.00"`. With a scale
+  (`->scale(n)`; money defaults to 2) exactly that many digits: exact database
+  decimals are rounded half up as text, never through a float, so the answer is
+  the same on every database. Without a scale the database's own digits stay
+  (`"120.0000"` from a `decimal(15,4)` column); a database that hands back a
+  float (SQLite) is written in its shortest form.
 - `date` → `YYYY-MM-DD`; `datetime` → ISO 8601 in UTC with `Z`.
 - Empty values are `null`; text columns may also hold `''`, list columns `[]`.
 - Dotted column ids are nested in rows: `company.title` → `{ "company": { "title": "…" } }`.

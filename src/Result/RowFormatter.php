@@ -71,8 +71,7 @@ final class RowFormatter
 
         return match ($column->type) {
             Type::Int => is_numeric($value) ? (int) $value : $value,
-            Type::Float, Type::Percentage => is_numeric($value) ? (float) $value : $value,
-            Type::Money => $this->money($value, $column->scale),
+            Type::Decimal, Type::Money, Type::Percentage => $this->decimal($value, $column->scale),
             Type::Bool => (bool) $value,
             Type::Date => $value instanceof DateTimeInterface ? $value->format('Y-m-d') : substr(Raw::string($value), 0, 10),
             Type::Datetime => $this->datetime($value),
@@ -81,14 +80,25 @@ final class RowFormatter
         };
     }
 
-    /** Decimal string with exactly `$scale` digits; exact database strings are rounded half up as text, never through a float. */
-    private function money(mixed $value, int $scale): mixed
+    /**
+     * Decimal string. With a scale exactly `$scale` digits: exact database strings are rounded half up as text, never
+     * through a float. Without one the database's own digits stay; a float (SQLite) is written in its shortest form.
+     */
+    private function decimal(mixed $value, ?int $scale): mixed
     {
         if (is_int($value) || is_float($value)) {
-            return number_format($value, $scale, '.', '');
+            if ($scale !== null) {
+                return number_format($value, $scale, '.', '');
+            }
+
+            return is_int($value) ? (string) $value : rtrim(rtrim(number_format($value, 14, '.', ''), '0'), '.');
         }
 
         if (! is_string($value) || preg_match('/^(-?)(\d+)(?:\.(\d*))?$/', $value, $m) !== 1) {
+            return $value;
+        }
+
+        if ($scale === null) {
             return $value;
         }
 
