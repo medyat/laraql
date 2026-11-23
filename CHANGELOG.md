@@ -2,12 +2,6 @@
 
 ## [Unreleased](https://github.com/medyat/laraql/commits/production/compare/0.4.1...HEAD)
 
-Breaking: decimal values change type on the wire; clients must be updated with the server.
-
-- Breaking: `Column::float` and the `float` type are renamed to `Column::decimal` and `decimal`.
-- Breaking: `decimal` and `percentage` are answered as decimal strings like money, never as JSON numbers. Without a scale the database's own digits stay.
-- Added: `->scale(n)` on `decimal` and `percentage` columns; filters on them take decimal strings too.
-
 ## [0.4.1](https://github.com/medyat/laraql/commits/production/compare/0.4.0...0.4.1) - 2026-11-23
 
 - Added: `Source::prepare()` runs once per page with the page's models, before the decorators, so relations they read load in bulk instead of per row.
