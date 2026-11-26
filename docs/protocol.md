@@ -44,6 +44,7 @@ only when it is malformed (`422`) or the request is unauthenticated (`401`).
 | `include` | map | — | Laraql extension, see below |
 | `options` | string[] | `[]` | Laraql extension: named hooks declared by the source |
 | `params` | object | `{}` | Laraql extension: named, typed inputs declared by the source, `{ "name": value }`; see below |
+| `match` | string[] | — | Laraql extension: texts to resolve to rows through the source's match columns; see below |
 
 ### Filter
 
@@ -150,6 +151,7 @@ and so is an id that is not a string.
 | `page` | `kind: rows` | `{ number, size, has_more }`; `has_more` is computed by fetching `size + 1` rows, no count query runs |
 | `total` | `kind: count` | integer |
 | `ignored` | something was skipped, see Unknown columns | `string[]` of request paths |
+| `matches` | the query sent `match` | text → list of row keys, see Match |
 | `error` | the query failed | an RFC 9457 problem object, see Errors |
 
 A client that never asks for `kind: count` never pays for a count.
@@ -208,6 +210,46 @@ match.
 - Hooks (`scope`, `joins`, decorators, option closures) read them from
   `Input::$params`, next to the user and the requested field ids.
 - They apply to `kind: count` too; includes carry no params.
+
+## Match (Laraql extension)
+
+Finds the rows a list of texts stands for: an import file names a category by
+its code in one row and by its name in the next. The client sends the texts,
+the source decides which columns they are compared with.
+
+```json
+{ "source": "category", "fields": ["code", "title"], "match": ["K-001", "PAKETLİ ÜRÜNLER", "YOK"] }
+```
+
+```json
+{ "rows": [ … ], "page": { "number": 1, "size": 500, "has_more": false },
+  "matches": { "K-001": ["9f…"], "PAKETLİ ÜRÜNLER": ["a1…", "b2…"], "YOK": [] } }
+```
+
+- A source declares its match columns in `matchColumns(Context $context)`, in
+  priority order: `['id' => $uuidOnly, 'code' => null, 'title' => $upper]`. The
+  list is resolved per request, so it may follow the user's language. Each column
+  may carry a normalizer, `fn (string $text): ?string`: it turns the text into
+  the value stored in that column (upper case, a trimmed code) or returns `null`
+  when the text cannot be one (a name is never a UUID); it must return a value
+  the column's database type accepts. Without a normalizer the text is compared
+  as it is. A column the user may not see is left out.
+- Comparison is exact, like `in`. One query runs: the texts are compared with
+  every match column at once (`code IN (…) OR title IN (…)`), combined with
+  `filters`, `search`, `options` and the source's scope by AND.
+- `matches` has one entry per text, in request order: the keys of the rows the
+  text matched in the **first** match column that matched it at all; later
+  columns are not consulted for that text. More than one key means the text is
+  ambiguous; `[]` means nothing matched. The client decides what to do with
+  either.
+- `rows` holds only the rows some text resolved to, each once, in the usual
+  order; `fields`, `sort`, `include` and decorators apply.
+- No paging: the answer is one page of at most `limits.page_size.max` rows.
+  `has_more: true` means some texts matched more rows than fit, so their
+  entries may be incomplete; send fewer texts.
+- At most `limits.in_values` texts, each a non-empty string, no duplicates.
+  `page` and `kind: count` cannot be combined with `match` (`422`); a source
+  without match columns rejects it with `422` (`errors.match`).
 
 ## Errors
 

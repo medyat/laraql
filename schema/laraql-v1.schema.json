@@ -447,6 +447,16 @@
               "boolean"
             ]
           }
+        },
+        "match": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "Laraql extension: texts to resolve to rows through the source's match columns; not with page or kind count."
         }
       }
     },
@@ -512,6 +522,19 @@
           },
           "minItems": 1,
           "description": "Request paths of unknown columns skipped in fields and sort; present only when something was skipped."
+        },
+        "matches": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": [
+                "string",
+                "integer"
+              ]
+            }
+          },
+          "description": "Present when the query sent match: each text's row keys from the first match column that matched it; [] when none did."
         }
       }
     },

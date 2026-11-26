@@ -29,4 +29,6 @@ return [
     'limit_exceeded' => 'Value for ":field" exceeds the limit of :max.',
     'me_requires_user' => '"@me" needs an authenticated user.',
     'search_not_supported' => 'Source ":source" has no searchable columns.',
+    'match_not_supported' => 'Source ":source" has no match columns.',
+    'match_excludes' => '":field" cannot be combined with match.',
 ];

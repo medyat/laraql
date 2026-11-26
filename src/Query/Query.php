@@ -21,6 +21,8 @@ final readonly class Query
      * @param  list<string>  $options
      * @param  array<string, mixed>  $params  Validated values keyed by the declared param names
      * @param  list<string>  $ignored  Request paths of unknown columns skipped in fields and sort
+     * @param  list<string>|null  $match  Texts to resolve; null = not a match query
+     * @param  list<MatchColumn>  $matchColumns  The source's visible match columns, in priority order
      */
     public function __construct(
         public Source $source,
@@ -35,5 +37,7 @@ final readonly class Query
         public array $options,
         public array $params,
         public array $ignored = [],
+        public ?array $match = null,
+        public array $matchColumns = [],
     ) {}
 }

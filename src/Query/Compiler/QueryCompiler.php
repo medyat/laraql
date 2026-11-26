@@ -35,9 +35,10 @@ final readonly class QueryCompiler
      * @param  list<Sort>  $sort
      * @param  list<string>  $searchTokens
      * @param  list<string>  $options
+     * @param  list<array{Column, list<string>}>  $match  Columns and the values compared with each, OR-ed together.
      * @return Builder<Model>
      */
-    public function build(Source $source, array $columns, array $select, array $conditions, array $sort, array $searchTokens, array $options, Input $input): Builder
+    public function build(Source $source, array $columns, array $select, array $conditions, array $sort, array $searchTokens, array $options, Input $input, array $match = []): Builder
     {
         $table = $source->table();
         $inner = $source->newModel()->newQuery();
@@ -52,7 +53,7 @@ final readonly class QueryCompiler
         }
 
         $searchable = $searchTokens === [] ? [] : $source->searchableColumns($columns, $input);
-        $this->applyJoins($inner, $source, [...$select, ...array_map(fn (Condition $c): Column => $c->column, $conditions), ...$searchable], $input);
+        $this->applyJoins($inner, $source, [...$select, ...array_map(fn (Condition $c): Column => $c->column, $conditions), ...$searchable, ...array_column($match, 0)], $input);
         $inner->select(array_map(fn (Column $column) => $this->selectExpression($column, $table), $select));
 
         $dates = new DateRange($input);
@@ -70,6 +71,13 @@ final readonly class QueryCompiler
             $this->filters->search($inner, array_map(fn (Column $column): string => $column->qualified($table), $searchable), $searchTokens);
         }
 
+        // The OR group cannot be split across the layers: it goes down only when every column can.
+        $matchPushable = array_all($match, fn (array $item): bool => $item[0]->pushable());
+
+        if ($match !== [] && $matchPushable) {
+            $this->match($inner, $match, fn (Column $column): string => $column->qualified($table));
+        }
+
         // newModelQuery: global scopes already ran in the sub-query, and the model's own $with is not applied (eager loads come only from load options).
         $outer = $source->newModel()->newModelQuery()->fromSub($inner, $table);
 
@@ -79,6 +87,10 @@ final readonly class QueryCompiler
 
         if ($searchable !== [] && ! $searchPushable) {
             $this->filters->search($outer, array_map(fn (Column $column): string => $column->alias(), $searchable), $searchTokens);
+        }
+
+        if ($match !== [] && ! $matchPushable) {
+            $this->match($outer, $match, fn (Column $column): string => $column->alias());
         }
 
         foreach ($options as $name) {
@@ -92,6 +104,20 @@ final readonly class QueryCompiler
         $this->orderBy($outer, $sort, $columns[$source->key()]);
 
         return $outer;
+    }
+
+    /**
+     * @param  Builder<Model>  $query
+     * @param  list<array{Column, list<string>}>  $match
+     * @param  Closure(Column): string  $target
+     */
+    private function match(Builder $query, array $match, Closure $target): void
+    {
+        $query->where(function (Builder $group) use ($match, $target): void {
+            foreach ($match as [$column, $values]) {
+                $group->orWhereIn($target($column), $values);
+            }
+        });
     }
 
     /**

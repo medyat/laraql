@@ -2,6 +2,8 @@
 
 ## [Unreleased](https://github.com/medyat/laraql/commits/production/compare/0.4.1...HEAD)
 
+- Added: `match` resolves a list of texts to rows through the columns a source declares in `matchColumns()`, in priority order, each with an optional normalizer. One query compares every text with every column; the result's `matches` gives each text the keys of the first column that matched it (more than one: ambiguous, none: `[]`). For import files that name a record by its id, code or name.
+
 ## [0.4.1](https://github.com/medyat/laraql/commits/production/compare/0.4.0...0.4.1) - 2026-11-23
 
 - Added: `Source::prepare()` runs once per page with the page's models, before the decorators, so relations they read load in bulk instead of per row.

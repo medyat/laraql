@@ -80,6 +80,10 @@
         "with_bulk_lines",
         "product_codes",
         "with_ability"
+      ],
+      "match": [
+        "code (upper-cased)",
+        "customer"
       ]
     },
     "order_line": {

@@ -31,6 +31,10 @@ final readonly class Executor
     /** @return array{rows: list<array<string, mixed>>, page: array{number: int, size: int, has_more: bool}} */
     public function rows(Query $query, Context $context): array
     {
+        if ($query->match !== null) {
+            return $this->matched($query, $context);
+        }
+
         $output = $this->output($query->source, $query->columns, $query->fields, $context);
         $input = new Input($context, $query->params, $this->ids($output));
         $select = $this->select($query->columns, $output, $query->filters, $query->sort, [
@@ -56,6 +60,86 @@ final readonly class Executor
         return [
             'rows' => $rows,
             'page' => ['number' => $query->page->number, 'size' => $query->page->size, 'has_more' => $hasMore],
+        ];
+    }
+
+    /**
+     * A match query: every text compared with every match column in one query,
+     * then each text keeps the rows of the first column that matched it.
+     *
+     * @return array{rows: list<array<string, mixed>>, page: array{number: int, size: int, has_more: bool}, matches: array<string, list<mixed>>}
+     */
+    private function matched(Query $query, Context $context): array
+    {
+        $texts = $query->match ?? [];
+        $values = array_map(fn (MatchColumn $match): array => $match->values($texts), $query->matchColumns);
+        $compared = [];
+
+        foreach ($query->matchColumns as $i => $match) {
+            if ($values[$i] !== []) {
+                $compared[] = [$match->column, array_values(array_unique($values[$i]))];
+            }
+        }
+
+        $key = $query->columns[$query->source->key()];
+        $output = $this->output($query->source, $query->columns, $query->fields, $context);
+        $input = new Input($context, $query->params, $this->ids($output));
+        $models = new Collection;
+        $hasMore = false;
+
+        if ($compared !== []) {
+            $select = $this->select($query->columns, $output, $query->filters, $query->sort, [
+                ...array_map(fn (IncludeQuery $include): Column => $this->localKey($query->source, $query->columns, $include), array_values($query->include)),
+                ...$this->searchedOnOuter($query, $context),
+                ...array_column($compared, 0),
+            ]);
+            $models = $this->compiler
+                ->build($query->source, $query->columns, $select, $query->filters, $query->sort, $query->searchTokens, $query->options, $input, $compared)
+                ->limit($query->page->size + 1)
+                ->get();
+            $hasMore = $models->count() > $query->page->size;
+            $models = $models->take($query->page->size);
+        }
+
+        $matches = [];
+        $used = [];
+
+        foreach ($texts as $text) {
+            $matches[$text] = [];
+
+            foreach ($query->matchColumns as $i => $match) {
+                if (! isset($values[$i][$text])) {
+                    continue;
+                }
+
+                $hits = $models->filter(fn (Model $model): bool => Raw::string($model->getAttribute($match->column->alias())) === $values[$i][$text]);
+
+                if ($hits->isNotEmpty()) {
+                    foreach ($hits as $model) {
+                        $used[spl_object_id($model)] = true;
+                        $matches[$text][] = $model->getAttribute($key->alias());
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        $models = $models->filter(fn (Model $model): bool => isset($used[spl_object_id($model)]))->values();
+        $rows = [];
+
+        if ($models->isNotEmpty()) {
+            $rows = $this->formatAll($models, $output, $query->source, $query->options, $input);
+            $this->attachIncludes($rows, $models, $query->source, $query->columns, $query->include, $context);
+            $keys = array_column($rows, $key->id);
+            $byRaw = array_combine(array_map(fn (Model $model): string => Raw::string($model->getAttribute($key->alias())), $models->all()), $keys);
+            $matches = array_map(fn (array $raw): array => array_map(fn (mixed $value): mixed => $byRaw[Raw::string($value)], $raw), $matches);
+        }
+
+        return [
+            'rows' => $rows,
+            'page' => ['number' => 1, 'size' => $query->page->size, 'has_more' => $hasMore],
+            'matches' => $matches,
         ];
     }
 

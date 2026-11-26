@@ -188,6 +188,19 @@ abstract class Source
     }
 
     /**
+     * Columns a `match` text is compared with, in priority order, each with an
+     * optional normalizer `fn (string $text): ?string` (null = compare as is; a
+     * null result = this text cannot be a value of the column). Empty: the
+     * source rejects `match`.
+     *
+     * @return array<string, (Closure(string): ?string)|null>
+     */
+    public function matchColumns(Context $context): array
+    {
+        return [];
+    }
+
+    /**
      * Searchable columns the request's user may see.
      *
      * @param  array<string, Column>  $columns  This request's `columnMap()`.

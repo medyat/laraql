@@ -1,0 +1,42 @@
+{
+  "name": "error-match-with-page",
+  "description": "match answers one unpaged page: page cannot be sent with it.",
+  "context": {
+    "now": "2026-10-27T10:00:00+03:00",
+    "timezone": "Europe/Istanbul"
+  },
+  "request": {
+    "queries": {
+      "q": {
+        "source": "order",
+        "match": [
+          "SO-1001"
+        ],
+        "page": {
+          "number": 2,
+          "size": 10
+        }
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "results": {
+        "q": {
+          "error": {
+            "type": "https://github.com/medyat/laraql/blob/production/docs/protocol.md#invalid_query",
+            "title": "Invalid query",
+            "status": 422,
+            "detail": "The query is invalid.",
+            "errors": {
+              "page": [
+                "\"page\" cannot be combined with match."
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

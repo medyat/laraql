@@ -1,0 +1,65 @@
+{
+  "name": "match",
+  "description": "match: each text keeps the rows of the first match column that matched it (code, normalized to upper case, before customer); two keys mean ambiguous, [] means none.",
+  "context": {
+    "now": "2026-10-27T10:00:00+03:00",
+    "timezone": "Europe/Istanbul"
+  },
+  "request": {
+    "queries": {
+      "q": {
+        "source": "order",
+        "fields": [
+          "code",
+          "customer"
+        ],
+        "match": [
+          "so-1003",
+          "Ege Tarim Makine",
+          "Yok"
+        ]
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "results": {
+        "q": {
+          "rows": [
+            {
+              "id": 1,
+              "code": "SO-1001",
+              "customer": "Ege Tarim Makine"
+            },
+            {
+              "id": 3,
+              "code": "SO-1003",
+              "customer": "Atlas Kaldirma"
+            },
+            {
+              "id": 4,
+              "code": "SO-1004",
+              "customer": "Ege Tarim Makine"
+            }
+          ],
+          "page": {
+            "number": 1,
+            "size": 500,
+            "has_more": false
+          },
+          "matches": {
+            "so-1003": [
+              3
+            ],
+            "Ege Tarim Makine": [
+              1,
+              4
+            ],
+            "Yok": []
+          }
+        }
+      }
+    }
+  }
+}

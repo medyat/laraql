@@ -1,0 +1,38 @@
+{
+  "name": "error-match-not-supported",
+  "description": "A source without match columns rejects match.",
+  "context": {
+    "now": "2026-10-27T10:00:00+03:00",
+    "timezone": "Europe/Istanbul"
+  },
+  "request": {
+    "queries": {
+      "q": {
+        "source": "order_line",
+        "match": [
+          "P-1"
+        ]
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "body": {
+      "results": {
+        "q": {
+          "error": {
+            "type": "https://github.com/medyat/laraql/blob/production/docs/protocol.md#invalid_query",
+            "title": "Invalid query",
+            "status": 422,
+            "detail": "The query is invalid.",
+            "errors": {
+              "match": [
+                "Source \"order_line\" has no match columns."
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

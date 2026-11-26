@@ -24,7 +24,7 @@ use Medyat\Laraql\Source\Source;
  */
 final class Validator
 {
-    private const array QUERY_KEYS = ['source', 'kind', 'fields', 'filters', 'sort', 'page', 'search', 'include', 'options', 'params'];
+    private const array QUERY_KEYS = ['source', 'kind', 'fields', 'filters', 'sort', 'page', 'search', 'include', 'options', 'params', 'match'];
 
     private const array INCLUDE_KEYS = ['fields', 'filters', 'sort', 'limit', 'include'];
 
@@ -58,6 +58,8 @@ final class Validator
             $kind = 'rows';
         }
 
+        $match = $this->match($raw, $source, $errors);
+
         $query = new Query(
             source: $source,
             columns: $this->columnMap($source),
@@ -65,12 +67,15 @@ final class Validator
             fields: $this->fields($raw['fields'] ?? null, $source, 'fields', $errors),
             filters: $this->filters($raw['filters'] ?? [], $source, 'filters', $errors),
             sort: $this->sort($raw['sort'] ?? [], $source, 'sort', $errors),
-            page: $this->page($raw['page'] ?? [], $errors),
+            // A match answer is one unpaged page as large as the server allows.
+            page: $match === null ? $this->page($raw['page'] ?? [], $errors) : new Page(1, $this->pageMax()),
             searchTokens: $this->search($raw['search'] ?? null, $source, $errors),
             include: $this->include($raw['include'] ?? [], $source, 'include', 1, $errors),
             options: $this->options($raw['options'] ?? [], $source, 'options', $errors),
             params: $this->params($raw['params'] ?? [], $source, 'params', $errors),
             ignored: $this->ignored,
+            match: $match,
+            matchColumns: $match === null ? [] : $this->matchColumns($source),
         );
 
         $errors->throwIfAny();
@@ -89,6 +94,84 @@ final class Validator
                 $errors->add($prefix.$key, 'unknown_key', ['key' => (string) $key]);
             }
         }
+    }
+
+    /**
+     * Texts to resolve through the source's match columns: a list of distinct
+     * non-empty strings, one unpaged answer, never a count.
+     *
+     * @param  array<string, mixed>  $raw
+     * @return list<string>|null
+     */
+    private function match(array $raw, Source $source, Errors $errors): ?array
+    {
+        if (! array_key_exists('match', $raw)) {
+            return null;
+        }
+
+        $this->matchExcludes($raw, $errors);
+        $list = $raw['match'];
+        $texts = is_array($list) && array_is_list($list) ? array_values(array_filter($list, fn (mixed $text): bool => is_string($text) && $text !== '')) : [];
+
+        if ($texts === [] || count($texts) !== count($list) || count(array_unique($texts)) !== count($texts)) {
+            $errors->add('match', 'invalid_value', ['field' => 'match']);
+
+            return null;
+        }
+
+        $max = $this->limit('in_values');
+
+        if (count($texts) > $max) {
+            $errors->add('match', 'limit_exceeded', ['field' => 'match', 'max' => $max]);
+        }
+
+        if ($this->matchColumns($source) === []) {
+            $errors->add('match', 'match_not_supported', ['source' => $source->name()]);
+        }
+
+        return $texts;
+    }
+
+    /**
+     * `page` and `kind: count` say nothing in a match query; sending them is a mistake, not a no-op.
+     *
+     * @param  array<string, mixed>  $raw
+     */
+    private function matchExcludes(array $raw, Errors $errors): void
+    {
+        if (array_key_exists('page', $raw)) {
+            $errors->add('page', 'match_excludes', ['field' => 'page']);
+        }
+
+        if (($raw['kind'] ?? null) === 'count') {
+            $errors->add('kind', 'match_excludes', ['field' => 'kind']);
+        }
+    }
+
+    /**
+     * The source's match columns the user may see. A declared column that does
+     * not exist or cannot take `in` is a bug in the source, not in the request.
+     *
+     * @return list<MatchColumn>
+     */
+    private function matchColumns(Source $source): array
+    {
+        $columns = [];
+
+        foreach ($source->matchColumns($this->context) as $id => $normalize) {
+            $column = $this->columnMap($source)[$id]
+                ?? throw new LogicException("Source [{$source->name()}] declares unknown match column [{$id}].");
+
+            if ($column->type === Type::Multiselect || ! $column->type->allows(Op::In)) {
+                throw new LogicException("Match column [{$id}] of source [{$source->name()}] cannot be compared exactly.");
+            }
+
+            if ($column->visible($this->context)) {
+                $columns[] = new MatchColumn($column, $normalize);
+            }
+        }
+
+        return $columns;
     }
 
     /** @return list<Column>|null */
@@ -351,7 +434,7 @@ final class Validator
     {
         $defaults = $this->limits['page_size'] ?? [];
         $default = is_array($defaults) && is_int($defaults['default'] ?? null) ? $defaults['default'] : 50;
-        $max = is_array($defaults) && is_int($defaults['max'] ?? null) ? $defaults['max'] : 500;
+        $max = $this->pageMax();
 
         if (! is_array($raw)) {
             $errors->add('page', 'invalid_value', ['field' => 'page']);
@@ -576,6 +659,13 @@ final class Validator
     private function columnMap(Source $source): array
     {
         return $this->columnMaps[$source::class] ??= $source->columnMap($this->context);
+    }
+
+    private function pageMax(): int
+    {
+        $defaults = $this->limits['page_size'] ?? [];
+
+        return is_array($defaults) && is_int($defaults['max'] ?? null) ? $defaults['max'] : 500;
     }
 
     private function limit(string $key): int

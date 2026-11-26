@@ -59,6 +59,14 @@ final class OrderSource extends Source
         ];
     }
 
+    public function matchColumns(Context $context): array
+    {
+        return [
+            'code' => fn (string $text): string => strtoupper(trim($text)),
+            'customer' => null,
+        ];
+    }
+
     public function params(): array
     {
         return ['product_code' => Column::id('product_code')->describe('Narrow lines_qty to one product code.')];
